@@ -1,0 +1,885 @@
+/* Management Components Styles */
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h2,
+.modal-header h3 {
+  margin: 0;
+  color: #1f2937;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #6b7280;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  color: #374151;
+}
+
+/* Button Styles */
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+}
+
+.btn-secondary {
+  background-color: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background-color: #4b5563;
+}
+
+.btn-danger {
+  background-color: #ef4444;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #dc2626;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Header Management Actions */
+.management-actions {
+  display: flex;
+  gap: 10px;
+  margin-right: 20px;
+}
+
+/* Project Management Styles */
+.project-management {
+  min-width: 600px;
+}
+
+.project-actions {
+  margin-bottom: 20px;
+}
+
+.projects-list h3 {
+  margin-bottom: 15px;
+  color: #1f2937;
+}
+
+.project-cards {
+  display: grid;
+  gap: 15px;
+}
+
+.project-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.project-info h4 {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.project-description {
+  color: #6b7280;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.project-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.project-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Task Management Styles */
+.task-management {
+  min-width: 700px;
+}
+
+.task-actions {
+  margin-bottom: 20px;
+}
+
+.tasks-list h3 {
+  margin-bottom: 15px;
+  color: #1f2937;
+}
+
+.task-cards {
+  display: grid;
+  gap: 15px;
+}
+
+.task-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.task-info h4 {
+  margin: 0 0 8px 0;
+  color: #1f2937;
+}
+
+.task-description {
+  color: #6b7280;
+  margin: 8px 0;
+  font-size: 14px;
+}
+
+.task-meta {
+  display: flex;
+  gap: 15px;
+  font-size: 12px;
+  color: #6b7280;
+  flex-wrap: wrap;
+}
+
+.task-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Form Styles */
+.project-form,
+.task-form {
+  display: grid;
+  gap: 15px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 15px;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Error Message */
+.error-message {
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 15px;
+  color: #dc2626;
+}
+
+.error-message button {
+  background: none;
+  border: none;
+  color: #dc2626;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: 10px;
+}
+
+/* No Data Messages */
+.no-projects,
+.no-tasks {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 20px;
+}
+
+/* Task Card Actions */
+.task-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-left: 5px;
+}
+
+.task-action-btn:hover {
+  background-color: #f3f4f6;
+}
+
+.edit-btn:hover {
+  background-color: #dbeafe;
+}
+
+.delete-btn:hover {
+  background-color: #fee2e2;
+}
+
+/* Project Details Styles */
+.project-details {
+  min-width: 800px;
+  max-width: 1000px;
+}
+
+.project-details-content {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.project-info-section,
+.members-section {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section-header h3 {
+  margin: 0;
+  color: #1f2937;
+  font-size: 18px;
+}
+
+.project-fields {
+  display: grid;
+  gap: 20px;
+}
+
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.field-group label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.field-value {
+  padding: 8px 12px;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  color: #1f2937;
+  min-height: 20px;
+}
+
+.form-input,
+.form-textarea {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.no-members {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+  padding: 20px;
+}
+
+.member-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb;
+}
+
+.member-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.member-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.member-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.member-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.member-name {
+  font-weight: 600;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.member-email {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.member-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.role-select {
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 12px;
+  background: white;
+}
+
+.btn-sm {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Mobile-First Responsive Design */
+
+/* Large screens (768px and up) */
+@media (min-width: 768px) {
+  .modal-content {
+    max-width: 90vw;
+    max-height: 90vh;
+  }
+  
+  .project-management {
+    min-width: 600px;
+  }
+  
+  .task-management {
+    min-width: 700px;
+  }
+  
+  .project-details {
+    min-width: 800px;
+    max-width: 1000px;
+  }
+}
+
+/* Medium screens (600px to 767px) */
+@media (max-width: 767px) and (min-width: 600px) {
+  .modal-overlay {
+    padding: 16px;
+    align-items: flex-start;
+    padding-top: 20px;
+  }
+  
+  .modal-content {
+    margin: 0;
+    max-width: 100%;
+    max-height: 95vh;
+    padding: 16px;
+  }
+  
+  .modal-header {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+  
+  .modal-header h2,
+  .modal-header h3 {
+    font-size: 18px;
+  }
+  
+  .close-btn {
+    width: 36px;
+    height: 36px;
+    font-size: 20px;
+  }
+  
+  .project-management,
+  .task-management,
+  .project-details {
+    min-width: auto;
+  }
+  
+  .project-card,
+  .task-card {
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+  }
+  
+  .project-actions,
+  .task-actions {
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .form-actions .btn {
+    width: 100%;
+    height: 44px;
+    font-size: 16px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 10px 12px;
+  }
+  
+  .member-card {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px;
+  }
+  
+  .member-actions {
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .member-info {
+    gap: 10px;
+  }
+  
+  .member-avatar {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .project-details-content {
+    gap: 20px;
+  }
+  
+  .project-info-section,
+  .members-section {
+    padding: 16px;
+  }
+  
+  .section-header {
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+  }
+  
+  .section-header h3 {
+    font-size: 16px;
+  }
+}
+
+/* Small screens (below 600px) */
+@media (max-width: 599px) {
+  .modal-overlay {
+    padding: 8px;
+    align-items: flex-start;
+    padding-top: 16px;
+  }
+  
+  .modal-content {
+    margin: 0;
+    max-width: 100%;
+    max-height: 98vh;
+    padding: 12px;
+  }
+  
+  .modal-header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+  
+  .modal-header h2,
+  .modal-header h3 {
+    font-size: 16px;
+  }
+  
+  .close-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 18px;
+  }
+  
+  .project-management,
+  .task-management,
+  .project-details {
+    min-width: auto;
+  }
+  
+  .project-card,
+  .task-card {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px;
+  }
+  
+  .project-info h4,
+  .task-info h4 {
+    font-size: 14px;
+  }
+  
+  .project-description,
+  .task-description {
+    font-size: 13px;
+  }
+  
+  .project-meta,
+  .task-meta {
+    font-size: 11px;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  
+  .project-actions,
+  .task-actions {
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  
+  .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+  
+  .form-actions .btn {
+    width: 100%;
+    height: 42px;
+    font-size: 15px;
+  }
+  
+  .form-group {
+    gap: 4px;
+  }
+  
+  .form-group label {
+    font-size: 13px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    font-size: 16px; /* Prevent zoom on iOS */
+    padding: 8px 10px;
+  }
+  
+  .form-group textarea {
+    min-height: 70px;
+  }
+  
+  .member-card {
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 10px;
+  }
+  
+  .member-actions {
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .member-info {
+    gap: 8px;
+  }
+  
+  .member-avatar {
+    width: 32px;
+    height: 32px;
+  }
+  
+  .member-name {
+    font-size: 13px;
+  }
+  
+  .member-email {
+    font-size: 11px;
+  }
+  
+  .role-select {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .btn-sm {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .project-details-content {
+    gap: 16px;
+  }
+  
+  .project-info-section,
+  .members-section {
+    padding: 12px;
+  }
+  
+  .section-header {
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+  }
+  
+  .section-header h3 {
+    font-size: 14px;
+  }
+  
+  .project-fields {
+    gap: 16px;
+  }
+  
+  .field-group label {
+    font-size: 13px;
+  }
+  
+  .field-value {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .form-input,
+  .form-textarea {
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .form-textarea {
+    min-height: 60px;
+  }
+  
+  .members-list {
+    gap: 8px;
+  }
+  
+  .no-members {
+    padding: 16px;
+    font-size: 13px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .close-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  .btn {
+    min-height: 44px;
+    padding: 8px 16px;
+  }
+  
+  .btn-sm {
+    min-height: 36px;
+    padding: 6px 12px;
+  }
+  
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    min-height: 44px;
+    padding: 12px;
+  }
+  
+  .form-group textarea {
+    min-height: 100px;
+  }
+  
+  .form-actions .btn {
+    min-height: 48px;
+  }
+  
+  .task-action-btn {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  
+  .role-select {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+  
+  /* Better touch feedback */
+  .btn:active {
+    transform: scale(0.95);
+  }
+  
+  .close-btn:active {
+    transform: scale(0.9);
+  }
+  
+  .task-action-btn:active {
+    transform: scale(0.9);
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .modal-overlay {
+    padding-top: 8px;
+  }
+  
+  .modal-content {
+    max-height: 90vh;
+  }
+  
+  .project-details-content {
+    gap: 12px;
+  }
+  
+  .project-info-section,
+  .members-section {
+    padding: 10px;
+  }
+  
+  .form-group textarea {
+    min-height: 50px;
+  }
+}

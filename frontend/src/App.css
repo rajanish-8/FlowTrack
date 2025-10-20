@@ -1,0 +1,1184 @@
+/* App shell */
+.App {
+  width: 95vw;
+  max-width: none;
+  margin: 0 auto;
+  padding: 20px 12px 32px;
+}
+
+.App h1 {
+  font-size: 32px;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  margin-bottom: 24px;
+}
+
+/* Header */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+  backdrop-filter: saturate(180%) blur(12px);
+}
+
+header .Logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+header .Logo img {
+  width: 28px;
+  height: 28px;
+}
+
+header .Logo h1 {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0;
+}
+
+header nav {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+header nav ul {
+  list-style: none;
+  display: flex;
+  gap: 24px;
+  padding: 0;
+  margin: 0;
+}
+
+header nav li {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Project Display */
+.project-display {
+  display: flex;
+  align-items: center;
+}
+
+.project-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.project-dropdown-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.project-dropdown-button:hover {
+  background: var(--muted);
+  border-color: var(--border-hover);
+}
+
+.project-dropdown-text {
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.project-dropdown-arrow {
+  font-size: 10px;
+  transition: transform 0.2s ease;
+  color: var(--text-muted);
+}
+
+.project-dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.project-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  z-index: 1000;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.project-dropdown-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.project-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.project-dropdown-item:hover {
+  background: var(--muted);
+}
+
+.project-dropdown-item:active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Management Actions */
+.management-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.management-actions .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.management-actions .btn-primary {
+  background: var(--primary);
+  color: white;
+  border: 1px solid var(--primary);
+}
+
+.management-actions .btn-primary:hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+}
+
+.management-actions .btn-secondary {
+  background: var(--muted);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.management-actions .btn-secondary:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Header icons */
+header i {
+  width: 28px;
+  height: 28px;
+  display: inline-block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 20px 20px;
+}
+
+header i:first-of-type {
+  margin-left: auto;
+  background-image: url("./assets/icon-bell.svg");
+  filter: none;
+}
+
+header i:last-of-type {
+  margin-left: 8px;
+  background-image: url("./assets/default-avatar.svg");
+  background-size: cover;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+/* Columns layout */
+.column-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  width: 100%;
+  min-height: 70vh;
+}
+
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 8px;
+}
+
+.board-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.board-title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text);
+}
+
+.project-info {
+  display: flex;
+  align-items: center;
+}
+
+.project-name {
+  background: var(--primary-bg);
+  color: var(--primary-text);
+  padding: 6px 12px;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.columns-wrapper {
+  display: grid;
+  grid-template-columns: repeat(4, 280px);
+  gap: 24px;
+  width: 100%;
+  justify-content: center;
+  padding-bottom: 8px;
+  /* Allow horizontal scroll on smaller screens */
+  overflow-x: auto;
+}
+
+.column {
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.9), var(--shadow);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  width: 280px;
+  min-height: 500px;
+  height: auto;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s ease;
+  position: relative;
+  z-index: 1;
+  /* Ensure proper flex container behavior */
+  overflow: hidden;
+}
+
+.column:hover {
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.1);
+  transform: translateY(-2px);
+}
+
+.column-header {
+  padding: 8px 8px 12px 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+
+.column-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text);
+}
+
+.column-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  /* Enable vertical scrolling for tasks */
+  overflow-y: auto;
+  /* Add padding for scrollbar */
+  padding-right: 8px;
+  /* Ensure proper flex behavior */
+  align-items: stretch;
+  justify-content: flex-start;
+}
+
+/* Scrollbar styles removed to prevent drag issues */
+
+/* Drag and drop placeholder styling */
+.column-tasks [data-rbd-placeholder-context-id] {
+  display: none !important;
+}
+
+/* Ensure proper drag area constraints */
+.column-tasks > * {
+  flex-shrink: 0;
+}
+
+/* Custom scrollbar styling for column tasks */
+.column-tasks::-webkit-scrollbar {
+  width: 6px;
+}
+
+.column-tasks::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 3px;
+}
+
+.column-tasks::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+  transition: background-color 0.2s ease;
+}
+
+.column-tasks::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Add subtle shadow when content overflows */
+.column-tasks:not(:empty) {
+  position: relative;
+}
+
+.column-tasks:not(:empty)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 8px; /* Account for scrollbar */
+  height: 20px;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.8));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.column-tasks:hover::after {
+  opacity: 1;
+}
+
+/* Task cards */
+.div-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  box-shadow: var(--shadow);
+  text-align: left;
+  cursor: grab;
+  position: relative;
+  z-index: 2;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.div-card:hover {
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+  border-color: var(--primary);
+  transform: translateY(-1px);
+}
+
+.div-card:active {
+  cursor: grabbing;
+}
+
+/* Dragging state */
+.div-card.dragging {
+  opacity: 0.8;
+  box-shadow: 0 8px 25px rgba(15, 23, 42, 0.15);
+  z-index: 9999;
+  transition: none;
+}
+
+/* Non-draggable state */
+.div-card.not-draggable {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: rgba(148, 163, 184, 0.1);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.div-card.not-draggable:hover {
+  transform: none;
+  box-shadow: var(--shadow);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.task-name {
+  display: block;
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+.div-card > div:first-of-type {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.profile-picture {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.priority-level {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: #f1f5f9;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Priority variants */
+.priority-level.priority-high {
+  background: var(--high-bg);
+  color: var(--high-text);
+}
+.priority-level.priority-medium {
+  background: var(--medium-bg);
+  color: var(--medium-text);
+}
+.priority-level.priority-low {
+  background: var(--low-bg);
+  color: var(--low-text);
+}
+
+.due-date {
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+/* User Profile Styles */
+.user-profile {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--border);
+}
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.logout-btn {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.logout-btn:hover {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+/* Loading and Error States */
+.loading-container, .error-container, .no-projects-message, .no-tasks-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+}
+
+/* Enhanced no-tasks message with action button */
+.no-tasks-message .btn {
+  margin-top: 20px;
+  font-size: 16px;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  transition: all 0.2s ease;
+}
+
+.no-tasks-message .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border);
+  border-top: 3px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-container h2, .no-projects-message h3, .no-tasks-message h3 {
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.error-container p, .no-projects-message p, .no-tasks-message p {
+  color: var(--text-muted);
+  margin-bottom: 16px;
+}
+
+.retry-button {
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.retry-button:hover {
+  background: var(--primary-hover);
+}
+
+/* Projects Info */
+.projects-info {
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.projects-info p {
+  color: var(--text-muted);
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Enhanced Task Card Styles */
+.task-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.div-card:hover .task-actions {
+  opacity: 1;
+}
+
+.task-action-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 3px;
+  font-size: 12px;
+  transition: background-color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.task-action-btn:hover {
+  background-color: var(--muted);
+}
+
+.edit-btn:hover {
+  background-color: var(--primary-bg);
+}
+
+.delete-btn:hover {
+  background-color: var(--danger-bg);
+}
+
+.project-tag {
+  background: var(--primary-bg);
+  color: var(--primary-text);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.assignee-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.username {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  word-wrap: break-word;
+  line-height: 1.2;
+}
+
+.task-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+/* Mobile-First Responsive Design */
+
+/* Large screens (1400px and up) */
+@media (min-width: 1400px) {
+  .columns-wrapper {
+    grid-template-columns: repeat(4, 300px);
+    gap: 24px;
+    justify-content: center;
+  }
+  
+  .column {
+    width: 300px;
+  }
+}
+
+/* Medium-large screens (1000px to 1399px) */
+@media (max-width: 1399px) and (min-width: 1000px) {
+  .columns-wrapper {
+    grid-template-columns: repeat(4, 280px);
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+  }
+  
+  .column {
+    width: 280px;
+    flex-shrink: 0;
+  }
+}
+
+/* Medium screens (768px to 999px) */
+@media (max-width: 999px) and (min-width: 768px) {
+  .columns-wrapper {
+    grid-template-columns: repeat(2, 280px);
+    gap: 20px;
+    overflow-x: auto;
+    padding-bottom: 16px;
+  }
+  
+  .column {
+    width: 280px;
+    flex-shrink: 0;
+  }
+  
+  .header {
+    padding: 10px 12px;
+  }
+  
+  .header .Logo h1 {
+    font-size: 18px;
+  }
+  
+  .header nav ul {
+    gap: 16px;
+  }
+}
+
+/* Small screens (600px to 767px) */
+@media (max-width: 767px) and (min-width: 600px) {
+  .App {
+    padding: 12px 8px 24px;
+  }
+  
+  .columns-wrapper {
+    grid-template-columns: 1fr;
+    gap: 16px;
+    overflow-x: visible;
+  }
+  
+  .column {
+    width: 100%;
+    min-height: 350px;
+    max-height: 65vh;
+  }
+  
+  .column-tasks {
+    max-height: calc(65vh - 80px);
+  }
+  
+  .column-container {
+    padding: 12px;
+    gap: 16px;
+  }
+  
+  .header {
+    padding: 8px 10px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .header .Logo h1 {
+    font-size: 16px;
+  }
+  
+  .header nav {
+    position: static;
+    transform: none;
+    order: 3;
+    width: 100%;
+    margin-top: 8px;
+  }
+  
+  .header nav ul {
+    justify-content: center;
+    gap: 12px;
+  }
+  
+  .user-profile {
+    margin-left: auto;
+    order: 2;
+  }
+  
+  .user-info {
+    gap: 6px;
+  }
+  
+  .username {
+    font-size: 12px;
+  }
+  
+  .logout-btn {
+    padding: 3px 6px;
+    font-size: 11px;
+  }
+  
+  .board-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .board-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+  
+  .management-actions {
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .management-actions .btn {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  
+  .project-dropdown-button {
+    min-width: 100px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+  
+  .project-dropdown-menu {
+    right: 0;
+    left: auto;
+    min-width: 150px;
+  }
+  
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .task-actions {
+    align-self: flex-end;
+  }
+  
+  .div-card {
+    padding: 12px;
+  }
+  
+  .task-name {
+    font-size: 15px;
+  }
+  
+  .board-title {
+    font-size: 22px;
+  }
+  
+  .project-name {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+  
+  .column-header h3 {
+    font-size: 16px;
+  }
+}
+
+/* Extra small screens (below 600px) */
+@media (max-width: 599px) {
+  .App {
+    padding: 8px 6px 20px;
+  }
+  
+  .columns-wrapper {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    overflow-x: visible;
+  }
+  
+  .column {
+    width: 100%;
+    min-height: 300px;
+    max-height: 60vh;
+    padding: 12px;
+  }
+  
+  .column-tasks {
+    max-height: calc(60vh - 70px);
+  }
+  
+  .column-container {
+    padding: 8px;
+    gap: 12px;
+  }
+  
+  .header {
+    padding: 6px 8px;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .header .Logo {
+    gap: 6px;
+  }
+  
+  .header .Logo img {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .header .Logo h1 {
+    font-size: 14px;
+  }
+  
+  .header nav {
+    position: static;
+    transform: none;
+    order: 3;
+    width: 100%;
+    margin-top: 6px;
+  }
+  
+  .header nav ul {
+    justify-content: center;
+    gap: 8px;
+    font-size: 14px;
+  }
+  
+  .user-profile {
+    margin-left: auto;
+    order: 2;
+  }
+  
+  .user-info {
+    gap: 4px;
+  }
+  
+  .user-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .username {
+    display: none; /* Hide username on very small screens */
+  }
+  
+  .logout-btn {
+    padding: 2px 4px;
+    font-size: 10px;
+  }
+  
+  .board-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  
+  .board-actions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    width: 100%;
+  }
+  
+  .management-actions {
+    align-self: flex-end;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .management-actions .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .project-dropdown-button {
+    min-width: 80px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  
+  .project-dropdown-menu {
+    right: 0;
+    left: auto;
+    min-width: 120px;
+  }
+  
+  .project-dropdown-item {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .task-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  
+  .task-actions {
+    align-self: flex-end;
+    gap: 2px;
+  }
+  
+  .task-action-btn {
+    width: 20px;
+    height: 20px;
+    font-size: 10px;
+  }
+  
+  .div-card {
+    padding: 10px;
+  }
+  
+  .task-name {
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
+  
+  .board-title {
+    font-size: 18px;
+  }
+  
+  .project-name {
+    font-size: 11px;
+    padding: 3px 6px;
+  }
+  
+  .column-header h3 {
+    font-size: 14px;
+  }
+  
+  .profile-picture {
+    width: 24px;
+    height: 24px;
+  }
+  
+  .priority-level {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .due-date {
+    font-size: 12px;
+  }
+  
+  .username {
+    font-size: 10px;
+  }
+  
+  .projects-info p {
+    font-size: 12px;
+  }
+  
+  /* Mobile styles for no-tasks message */
+  .no-tasks-message {
+    padding: 40px 16px;
+  }
+  
+  .no-tasks-message h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  
+  .no-tasks-message p {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  
+  .no-tasks-message .btn {
+    font-size: 14px;
+    padding: 10px 20px;
+    width: 100%;
+    max-width: 280px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .div-card {
+    min-height: 60px; /* Larger touch targets */
+  }
+  
+  .div-card.touch-device {
+    cursor: grab;
+  }
+  
+  .div-card.touch-device:active {
+    cursor: grabbing;
+  }
+  
+  .task-action-btn {
+    min-width: 32px;
+    min-height: 32px;
+  }
+  
+  .management-actions .btn {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+  
+  .project-dropdown-button {
+    min-height: 36px;
+  }
+  
+  .logout-btn {
+    min-height: 32px;
+    padding: 6px 10px;
+  }
+  
+  /* Improve drag and drop on touch devices */
+  .div-card {
+    touch-action: none;
+  }
+  
+  .column-tasks {
+    touch-action: pan-y;
+  }
+  
+  /* Better touch feedback */
+  .div-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+  
+  .task-action-btn:active {
+    transform: scale(0.9);
+  }
+  
+  .btn:active {
+    transform: scale(0.95);
+  }
+  
+  /* Touch optimizations for no-tasks button */
+  .no-tasks-message .btn {
+    min-height: 48px;
+    padding: 12px 24px;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .column {
+    max-height: 80vh;
+  }
+  
+  .column-tasks {
+    max-height: calc(80vh - 80px);
+  }
+  
+  .header {
+    padding: 4px 8px;
+  }
+  
+  .header nav {
+    margin-top: 4px;
+  }
+}
+
+/* High DPI displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .header .Logo img,
+  .user-avatar,
+  .profile-picture {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+
