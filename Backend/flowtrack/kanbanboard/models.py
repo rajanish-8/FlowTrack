@@ -66,5 +66,5 @@ class Task(models.Model):
     due_date = models.DateField(null=True, blank=True)
     priority = models.CharField(max_length=10, choices=PRIORITY, default="low")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='tasks')
-    assigned_to = models.ForeignKey(ProjectMember, on_delete=models.CASCADE, related_name="assigned_tasks", null=True, blank=True)  # or ManyToManyField if multiple
+    assigned_to = models.ForeignKey(ProjectMember, on_delete=models.CASCADE, related_name="assigned_tasks")  # or ManyToManyField if multiple
     status = models.CharField(max_length=20, choices=STATUS, default="to do")

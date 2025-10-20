@@ -52,7 +52,7 @@ class TaskSerializerForBoard(serializers.ModelSerializer):
 
 class CreateTaskForBoard(serializers.ModelSerializer):
    project = serializers.PrimaryKeyRelatedField(queryset= Project.objects.all(), write_only=True)
-   assigned_to = serializers.PrimaryKeyRelatedField(queryset=ProjectMember.objects.all(), write_only=True, required=False, allow_null=True)
+   assigned_to = serializers.PrimaryKeyRelatedField(queryset=ProjectMember.objects.all(),write_only=True)
 
    class Meta:
       model = Task
@@ -188,7 +188,7 @@ class CreateProjectSerializer(serializers.ModelSerializer):
                instance.end_date = validated_data.get("end_date", instance.end_date)
 
 
-               instance_team_member_ids = ProjectMember.objects.filter(project=instance).values_list("user_id", flat=True)
+               instance_team_member_ids = instance.members.values_list("user_id", flat=True)
                instance_team_member_ids = set(instance_team_member_ids)
                new_member_ids = team_member_ids-instance_team_member_ids
                remove_members_ids = instance_team_member_ids - team_member_ids
