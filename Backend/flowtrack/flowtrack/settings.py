@@ -151,7 +151,9 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+CORS_ALLOW_ALL_ORIGINS = {
+    "https://flow-track-eight-chi.vercel.app",
+}
 CORS_ALLOW_CREDENTIALS = True
 
 # REST Framework settings
