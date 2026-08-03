@@ -1,5 +1,5 @@
 // API utility functions for FlowTrack
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {

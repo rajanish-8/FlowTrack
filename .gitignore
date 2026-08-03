@@ -1,6 +1,7 @@
 # Python
 __pycache__/
 *.pyc
+myvenv/
 venv/
 
 # Node
@@ -11,3 +12,4 @@ build/
 # General
 .env
 *.log
+.vercel
