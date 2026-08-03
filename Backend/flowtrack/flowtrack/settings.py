@@ -32,7 +32,8 @@ DEBUG = os.environ.get('DJANGO_DEBUG', DEFAULT_DEBUG).lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get(
     'DJANGO_ALLOWED_HOSTS',
-    '.vercel.app,localhost,127.0.0.1'
+    '.vercel.app,localhost,127.0.0.1',
+    'flowtrack-production-ecbb.up.railway.app'
 ).split(',')
 
 # Application definition
