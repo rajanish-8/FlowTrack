@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { projectAPI, userAPI } from "../utils/api";
+import { API_BASE_URL, projectAPI, userAPI } from "../utils/api";
 import "./Management.css";
 
 function ProjectDetails({ projectId, onClose, onProjectUpdate }) {
@@ -59,7 +59,7 @@ function ProjectDetails({ projectId, onClose, onProjectUpdate }) {
 
   const loadAvailableUsers = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/users/`, {
+      const response = await fetch(`${API_BASE_URL}/users/`, {
         headers: {
           "Authorization": `Token ${localStorage.getItem("token")}`,
           "Content-Type": "application/json",

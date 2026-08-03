@@ -29,12 +29,6 @@ function Board() {
           return;
         }
 
-        // Get API base URL from environment
-        const api = import.meta.env.VITE_API_BASE_URL;
-        if (!api) {
-          throw new Error("API base URL not configured");
-        }
-
         // Fetch user data and projects from backend
         const data = await userAPI.getKanbanData();
         console.log("Fetched user data:", data);

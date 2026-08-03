@@ -1,6 +1,7 @@
 import "../login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE_URL } from "../utils/api";
 
 function Login() {
   const navigate = useNavigate();
@@ -20,11 +21,14 @@ function Login() {
     const formData = new FormData()
     formData.append("email", form.email)
     formData.append("password", form.password)
-    
-    const api = import.meta.env.VITE_API_BASE_URL
+
+    if (!API_BASE_URL) {
+      alert("API base URL is not configured. Please set VITE_API_BASE_URL in your .env file.");
+      return;
+    }
 
     try{
-      const response = await fetch(`${api}/login/`,
+      const response = await fetch(`${API_BASE_URL}/login/`,
          {
           method:'POST',
           body: formData
