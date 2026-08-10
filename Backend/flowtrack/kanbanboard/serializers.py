@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Account, Project, Task, ProjectMember
+from .models import Account, Organization, OrganizationMembership, Project, Task, ProjectMember
 from django.db import transaction, IntegrityError
 
 class SignupSerializer(serializers.Serializer):
@@ -29,26 +29,103 @@ class SignupSerializer(serializers.Serializer):
      account.save()
      return account
 
+class OrganizationSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = Organization
+      fields = ["id", "name", "description", "created_at"]
+      read_only_fields = ["id", "created_at"]
+
+class CreateOrganizationSerializer(serializers.ModelSerializer):
+   class Meta:
+      model = Organization
+      fields = ["name", "description"]
+
+   def validate(self, attrs):
+      user = self.context["request"].user
+      if OrganizationMembership.objects.filter(user=user).exists():
+         raise serializers.ValidationError("You already belong to an organization.")
+      return attrs
+
+   def create(self, validated_data):
+      user = self.context["request"].user
+      with transaction.atomic():
+         organization = Organization.objects.create(**validated_data)
+         OrganizationMembership.objects.create(
+            organization=organization,
+            user=user,
+            role=OrganizationMembership.ROLE_OWNER,
+         )
+      return organization
+
+class OrganizationMembershipSerializer(serializers.ModelSerializer):
+   user_id = serializers.IntegerField(source="user.id", read_only=True)
+   username = serializers.CharField(source="user.username", read_only=True)
+   email = serializers.EmailField(source="user.email", read_only=True)
+   profile_picture = serializers.ImageField(source="user.profile_picture", use_url=True, read_only=True)
+
+   class Meta:
+      model = OrganizationMembership
+      fields = ["id", "user_id", "username", "email", "profile_picture", "role", "joined_at"]
+      read_only_fields = ["id", "joined_at"]
+
+class AddOrganizationMemberSerializer(serializers.Serializer):
+   email = serializers.EmailField()
+   role = serializers.ChoiceField(choices=[
+      OrganizationMembership.ROLE_MANAGER,
+      OrganizationMembership.ROLE_MEMBER,
+   ])
+
+   def validate_email(self, value):
+      try:
+         self.user = Account.objects.get(email__iexact=value)
+      except Account.DoesNotExist:
+         raise serializers.ValidationError("No account exists for this email. Ask the user to sign up first.")
+      return value
+
+   def validate(self, attrs):
+      organization = self.context["organization"]
+      if OrganizationMembership.objects.filter(user=self.user).exclude(organization=organization).exists():
+         raise serializers.ValidationError("This user already belongs to another organization.")
+      if OrganizationMembership.objects.filter(user=self.user, organization=organization).exists():
+         raise serializers.ValidationError("This user is already in your organization.")
+      return attrs
+
+   def create(self, validated_data):
+      organization = self.context["organization"]
+      return OrganizationMembership.objects.create(
+         organization=organization,
+         user=self.user,
+         role=validated_data["role"],
+      )
+
+class UpdateOrganizationMemberSerializer(serializers.Serializer):
+   role = serializers.ChoiceField(choices=[
+      OrganizationMembership.ROLE_MANAGER,
+      OrganizationMembership.ROLE_MEMBER,
+   ])
+
 class ProjectMemberMiniSerializer(serializers.ModelSerializer):
+   id = serializers.IntegerField(read_only=True)
    username = serializers.CharField(source = "user.username")
    profile_picture = serializers.ImageField(source = "user.profile_picture")
    user_id = serializers.IntegerField(source = "user.id")
    class Meta:
       model = ProjectMember
-      fields = ["username", "profile_picture", "user_id"]
+      fields = ["id", "username", "profile_picture", "user_id"]
 
 class AccountMiniSerializer(serializers.ModelSerializer):
    profile_picture = serializers.ImageField(use_url=True)
    class Meta:
       model = Account
-      fields = ["id","username", "profile_picture"]
+      fields = ["id","username", "email", "profile_picture"]
 
 
 class TaskSerializerForBoard(serializers.ModelSerializer):
    assigned_to = ProjectMemberMiniSerializer(read_only=True)
+   project = serializers.IntegerField(source="project.id", read_only=True)
    class Meta:
       model=Task
-      fields = ["id","title","due_date","assigned_to", "status", "priority"]
+      fields = ["id","title","description","due_date","assigned_to", "status", "priority", "project"]
 
 class CreateTaskForBoard(serializers.ModelSerializer):
    project = serializers.PrimaryKeyRelatedField(queryset= Project.objects.all(), write_only=True)
@@ -56,7 +133,7 @@ class CreateTaskForBoard(serializers.ModelSerializer):
 
    class Meta:
       model = Task
-      fields = ["title", "description","due_date","priority","project","assigned_to"]   
+      fields = ["title", "description","due_date","priority","project","assigned_to", "status"]   
 
    def create(self, validated_data):
       try:
@@ -79,12 +156,15 @@ class CreateTaskForBoard(serializers.ModelSerializer):
 
 
 class ProjectSerializerForBoard(serializers.ModelSerializer):
-   
    tasks = TaskSerializerForBoard(many=True,read_only=True )
+   members = serializers.SerializerMethodField()
 
    class Meta:
       model =  Project
-      fields = ["id","name","tasks"]
+      fields = ["id","name","members","tasks"]
+
+   def get_members(self, obj):
+      return ProjectMemberDetailSerializer(obj.projectmember_set.select_related("user"), many=True).data
 
 
 
@@ -105,7 +185,7 @@ class ProjectDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Project
-        fields = ["id", "name", "description", "created_at", "end_date", "members", "team_member_ids", "manager_ids"]
+        fields = ["id", "name", "description", "created_at", "end_date", "organization", "members", "team_member_ids", "manager_ids"]
     
     def get_members(self, obj):
         # Get ProjectMember objects related to this project
@@ -121,6 +201,7 @@ class CreateProjectSerializer(serializers.ModelSerializer):
       fields = ["name", "description",  "end_date", "team_member_ids", "manager_ids"]
 
    def validate(self, attrs):
+      organization = self.context.get("organization")
       #extract team_member_ids and manager_ids for verification
       team_member_ids = set(attrs.get("team_member_ids",[]))
       manager_ids = set(attrs.get("manager_ids",[]))
@@ -134,16 +215,17 @@ class CreateProjectSerializer(serializers.ModelSerializer):
          existing = set(accounts.values_list("id", flat=True))
          missing = list(team_member_ids - existing)
          raise serializers.ValidationError({"team_member_ids": f"User Ids not found: {missing}"})
-      
-      #second validation: Accounts are not enrolled in any other project
-      already = ProjectMember.objects.filter(user_id__in=team_member_ids)
-      if getattr(self, 'instance', None):
-         # For updates, exclude current project members
-         already = already.exclude(project=self.instance)
-      
-      already_user_ids = set(already.values_list("user_id", flat=True))
-      if already_user_ids:
-         raise serializers.ValidationError({"team_member_ids":f"Following members are already enrolled in other projects: {list(already_user_ids)}"})
+
+      if organization:
+         org_member_ids = set(
+            OrganizationMembership.objects.filter(
+               organization=organization,
+               user_id__in=team_member_ids,
+            ).values_list("user_id", flat=True)
+         )
+         missing_from_org = list(team_member_ids - org_member_ids)
+         if missing_from_org:
+            raise serializers.ValidationError({"team_member_ids": f"Users are not in this organization: {missing_from_org}"})
       
       attrs["team_member_ids"] = list(team_member_ids)
       attrs["manager_ids"] = list(manager_ids)
@@ -153,13 +235,20 @@ class CreateProjectSerializer(serializers.ModelSerializer):
    def create(self, validated_data):
       team_member_ids = validated_data.pop("team_member_ids",[])
       manager_ids = validated_data.pop("manager_ids",[])
+      owner = self.context.get("owner")
+      if owner:
+         team_member_ids = set(team_member_ids)
+         manager_ids = set(manager_ids)
+         team_member_ids.add(owner.id)
+         manager_ids.add(owner.id)
 
       try:
          with transaction.atomic():
             project = Project.objects.create(
                name=validated_data.get("name"),
                description = validated_data.get("description",""),
-               end_date = validated_data.get("end_date",None)
+               end_date = validated_data.get("end_date",None),
+               organization = self.context.get("organization")
             )
 
             members = []
@@ -178,6 +267,10 @@ class CreateProjectSerializer(serializers.ModelSerializer):
    def update(self, instance, validated_data):
          team_member_ids = set(validated_data.pop("team_member_ids",[]))
          manager_ids = set(validated_data.pop("manager_ids",[]))
+         owner = self.context.get("owner")
+         if owner:
+            team_member_ids.add(owner.id)
+            manager_ids.add(owner.id)
 
          team_member_ids |= manager_ids
 
@@ -188,7 +281,7 @@ class CreateProjectSerializer(serializers.ModelSerializer):
                instance.end_date = validated_data.get("end_date", instance.end_date)
 
 
-               instance_team_member_ids = instance.members.values_list("user_id", flat=True)
+               instance_team_member_ids = instance.members.values_list("id", flat=True)
                instance_team_member_ids = set(instance_team_member_ids)
                new_member_ids = team_member_ids-instance_team_member_ids
                remove_members_ids = instance_team_member_ids - team_member_ids
@@ -229,10 +322,5 @@ class UserRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMember
         fields = ["project_id", "project_name", "role"]
-
-
-
-
-
 
 

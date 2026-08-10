@@ -5,21 +5,30 @@ import ProjectDropdown from "../components/ProjectDropdown";
 import TaskManagement from "../components/TaskManagement";
 import { taskAPI } from "../utils/api";
 
-function ColumnContainer({ allProjects, displayProjects, userData, userRole, selectedProject, onProjectChange, onProjectManagement, onTaskManagement }){
-  // Define column mapping - backend uses lowercase, frontend displays capitalized
-  const columnMapping = {
-    "to do": "To Do",
-    "in progress": "In Progress", 
-    "review": "Review",
-    "done": "Done"
-  };
-  
-  const columns = ["To Do", "In Progress", "Review", "Done"];
-  
+const columnMapping = {
+  "to do": "To Do",
+  "in progress": "In Progress",
+  "review": "Review",
+  "done": "Done",
+};
+
+const columns = ["To Do", "In Progress", "Review", "Done"];
+
+function ColumnContainer({ allProjects, displayProjects, userData, userRole, selectedProject, onProjectChange, onProjectManagement, onTaskManagement, onOrganizationMembers }){
   // Transform backend data to frontend format
   const [tasks, setTasks] = useState([]);
   const [showTaskManagement, setShowTaskManagement] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
+  const selectedProjectName = selectedProject?.name || allProjects?.[0]?.name || "Workspace";
+  const roleLabel = {
+    owner: "Organization Owner",
+    manager: "Manager",
+    member: "Member",
+  }[userRole] || "Member";
+  const doneCount = tasks.filter((task) => task.status === "Done").length;
+  const inProgressCount = tasks.filter((task) => task.status === "In Progress").length;
+  const reviewCount = tasks.filter((task) => task.status === "Review").length;
+  const completionRate = tasks.length > 0 ? Math.round((doneCount / tasks.length) * 100) : 0;
 
   useEffect(() => {
     if (displayProjects && displayProjects.length > 0) {
@@ -62,8 +71,8 @@ function ColumnContainer({ allProjects, displayProjects, userData, userRole, sel
     }
 
     // Check if user has permission to move this task
-    // Super admins and managers can move any task, members can only move tasks assigned to them
-    if (userRole !== 'super_admin' && userRole !== 'manager') {
+    // Owners and managers can move any task, members can only move tasks assigned to them
+    if (userRole !== 'owner' && userRole !== 'manager') {
       // For regular members, check if the task is assigned to them
       if (task.assigned_user_id !== userData?.id) {
         alert("You can only move tasks that are assigned to you.");
@@ -139,10 +148,24 @@ function ColumnContainer({ allProjects, displayProjects, userData, userRole, sel
   if (!allProjects || allProjects.length === 0) {
     return (
       <div className="column-container">
-        <h1 className="board-title">Task Board</h1>
+        <div className="board-hero">
+          <div>
+            <span className="eyebrow">Workspace</span>
+            <h1 className="board-title">Task Board</h1>
+          </div>
+        </div>
         <div className="no-projects-message">
           <h3>No projects found</h3>
-          <p>You don't have access to any projects yet. Contact your administrator to be added to a project.</p>
+          <p>
+            {userRole === "owner"
+              ? "Create your first project to start organizing organization work."
+              : "You don't have access to any projects yet. Ask your Organization Owner or Manager to add you to a project."}
+          </p>
+          {userRole === "owner" && (
+            <button className="btn btn-primary" onClick={onProjectManagement}>
+              Create First Project
+            </button>
+          )}
         </div>
       </div>
     );
@@ -151,83 +174,17 @@ function ColumnContainer({ allProjects, displayProjects, userData, userRole, sel
   if (tasks.length === 0) {
     return (
       <div className="column-container">
-        <div className="board-header">
-          <h1 className="board-title">Task Board</h1>
-          <div className="board-actions">
-            <div className="project-info">
-              {allProjects.length > 0 && (
-                <div className="project-display">
-                  {userRole === 'super_admin' ? (
-                    <ProjectDropdown 
-                      projects={allProjects}
-                      userRole={userRole}
-                      selectedProject={selectedProject}
-                      onProjectChange={onProjectChange}
-                    />
-                  ) : (
-                    <div className="project-name">
-                      {allProjects.length === 1 ? allProjects[0].name : `${allProjects.length} Projects`}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* Management Actions - Always show for managers and super admins */}
-            <div className="management-actions">
-              {userRole === 'super_admin' && (
-                <button 
-                  className="btn btn-primary"
-                  onClick={onProjectManagement}
-                  title="Manage Projects"
-                >
-                  📋 Projects
-                </button>
-              )}
-              {(userRole === 'super_admin' || userRole === 'manager') && (
-                <button 
-                  className="btn btn-secondary"
-                  onClick={onTaskManagement}
-                  title="Manage Tasks"
-                >
-                  ✅ Tasks
-                </button>
-              )}
-            </div>
+        <div className="board-hero">
+          <div className="board-copy">
+            <span className="eyebrow">{roleLabel} workspace</span>
+            <h1 className="board-title">{selectedProjectName}</h1>
+            <p className="board-subtitle">Plan, assign, and move work through the delivery pipeline.</p>
           </div>
-        </div>
-        <div className="projects-info">
-          <p>Showing tasks from {displayProjects.length} project{displayProjects.length !== 1 ? 's' : ''}</p>
-        </div>
-        <div className="no-tasks-message">
-          <h3>No tasks found</h3>
-          <p>There are no tasks in your projects yet.</p>
-          {(userRole === 'super_admin' || userRole === 'manager') && (
-            <div style={{ marginTop: '20px' }}>
-              <button 
-                className="btn btn-primary"
-                onClick={onTaskManagement}
-                style={{ fontSize: '16px', padding: '12px 24px' }}
-              >
-                ➕ Create Your First Task
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  return(
-    <DragDropContext onDragEnd={onDrag}>
-      <div className="column-container">
-        <div className="board-header">
-          <h1 className="board-title">Task Board</h1>
           <div className="board-actions">
             <div className="project-info">
               {allProjects.length > 0 && (
                 <div className="project-display">
-                  {userRole === 'super_admin' ? (
+                  {userRole === 'owner' ? (
                     <ProjectDropdown 
                       projects={allProjects}
                       userRole={userRole}
@@ -245,29 +202,148 @@ function ColumnContainer({ allProjects, displayProjects, userData, userRole, sel
             
             {/* Management Actions */}
             <div className="management-actions">
-              {userRole === 'super_admin' && (
+              {userRole === 'owner' && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={onOrganizationMembers}
+                  title="Manage Organization Members"
+                >
+                  Members
+                </button>
+              )}
+              {userRole === 'owner' && (
                 <button 
                   className="btn btn-primary"
                   onClick={onProjectManagement}
                   title="Manage Projects"
                 >
-                  📋 Projects
+                  Projects
                 </button>
               )}
-              {(userRole === 'super_admin' || userRole === 'manager') && (
+              {(userRole === 'owner' || userRole === 'manager') && (
                 <button 
                   className="btn btn-secondary"
                   onClick={onTaskManagement}
                   title="Manage Tasks"
                 >
-                  ✅ Tasks
+                  Tasks
                 </button>
               )}
             </div>
           </div>
         </div>
-        <div className="projects-info">
-          <p>Showing tasks from {displayProjects.length} project{displayProjects.length !== 1 ? 's' : ''}</p>
+        <div className="board-stats">
+          <div className="stat-panel">
+            <span className="stat-label">Projects shown</span>
+            <strong>{displayProjects.length}</strong>
+          </div>
+          <div className="stat-panel">
+            <span className="stat-label">Total tasks</span>
+            <strong>0</strong>
+          </div>
+          <div className="stat-panel">
+            <span className="stat-label">Complete</span>
+            <strong>0%</strong>
+          </div>
+        </div>
+        <div className="no-tasks-message">
+          <h3>No tasks found</h3>
+          <p>There are no tasks in your projects yet.</p>
+          {(userRole === 'owner' || userRole === 'manager') && (
+            <div style={{ marginTop: '20px' }}>
+              <button 
+                className="btn btn-primary"
+                onClick={onTaskManagement}
+                style={{ fontSize: '16px', padding: '12px 24px' }}
+              >
+                Create Your First Task
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  return(
+    <DragDropContext onDragEnd={onDrag}>
+      <div className="column-container">
+        <div className="board-hero">
+          <div className="board-copy">
+            <span className="eyebrow">{roleLabel} workspace</span>
+            <h1 className="board-title">{selectedProjectName}</h1>
+            <p className="board-subtitle">Showing {tasks.length} task{tasks.length !== 1 ? "s" : ""} from {displayProjects.length} project{displayProjects.length !== 1 ? "s" : ""}.</p>
+          </div>
+          <div className="board-actions">
+            <div className="project-info">
+              {allProjects.length > 0 && (
+                <div className="project-display">
+                  {userRole === 'owner' ? (
+                    <ProjectDropdown 
+                      projects={allProjects}
+                      userRole={userRole}
+                      selectedProject={selectedProject}
+                      onProjectChange={onProjectChange}
+                    />
+                  ) : (
+                    <div className="project-name">
+                      {allProjects.length === 1 ? allProjects[0].name : `${allProjects.length} Projects`}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Management Actions */}
+            <div className="management-actions">
+              {userRole === 'owner' && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={onOrganizationMembers}
+                  title="Manage Organization Members"
+                >
+                  Members
+                </button>
+              )}
+              {userRole === 'owner' && (
+                <button 
+                  className="btn btn-primary"
+                  onClick={onProjectManagement}
+                  title="Manage Projects"
+                >
+                  Projects
+                </button>
+              )}
+              {(userRole === 'owner' || userRole === 'manager') && (
+                <button 
+                  className="btn btn-secondary"
+                  onClick={onTaskManagement}
+                  title="Manage Tasks"
+                >
+                  Tasks
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+        <div className="board-stats">
+          <div className="stat-panel">
+            <span className="stat-label">Total tasks</span>
+            <strong>{tasks.length}</strong>
+          </div>
+          <div className="stat-panel">
+            <span className="stat-label">In progress</span>
+            <strong>{inProgressCount}</strong>
+          </div>
+          <div className="stat-panel">
+            <span className="stat-label">In review</span>
+            <strong>{reviewCount}</strong>
+          </div>
+          <div className="stat-panel stat-progress">
+            <span className="stat-label">Complete</span>
+            <strong>{completionRate}%</strong>
+            <span className="progress-track"><span style={{ width: `${completionRate}%` }} /></span>
+          </div>
         </div>
         <div className="columns-wrapper">
           {columns.map((ColName, index) => (

@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { API_BASE_URL, projectAPI, userAPI } from "../utils/api";
+import { useState, useEffect, useCallback } from "react";
+import { API_BASE_URL, projectAPI } from "../utils/api";
 import "./Management.css";
 
 function ProjectDetails({ projectId, onClose, onProjectUpdate }) {
@@ -20,14 +20,25 @@ function ProjectDetails({ projectId, onClose, onProjectUpdate }) {
     role: "member"
   });
 
-  // Load project details
-  useEffect(() => {
-    if (projectId && projectId !== 'undefined' && projectId !== undefined) {
-      loadProjectDetails();
+  const loadAvailableUsers = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/users/`, {
+        headers: {
+          "Authorization": `Token ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.ok) {
+        const users = await response.json();
+        setAvailableUsers(users);
+      }
+    } catch (err) {
+      console.error("Error loading users:", err);
     }
-  }, [projectId]);
+  }, []);
 
-  const loadProjectDetails = async () => {
+  const loadProjectDetails = useCallback(async () => {
     if (!projectId || projectId === 'undefined' || projectId === undefined) {
       setError("No project ID provided");
       return;
@@ -55,25 +66,14 @@ function ProjectDetails({ projectId, onClose, onProjectUpdate }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [loadAvailableUsers, projectId]);
 
-  const loadAvailableUsers = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/users/`, {
-        headers: {
-          "Authorization": `Token ${localStorage.getItem("token")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      
-      if (response.ok) {
-        const users = await response.json();
-        setAvailableUsers(users);
-      }
-    } catch (err) {
-      console.error("Error loading users:", err);
+  // Load project details
+  useEffect(() => {
+    if (projectId && projectId !== 'undefined' && projectId !== undefined) {
+      loadProjectDetails();
     }
-  };
+  }, [loadProjectDetails, projectId]);
 
   const handleSave = async () => {
     if (!projectId || projectId === 'undefined' || projectId === undefined) {
@@ -107,7 +107,7 @@ function ProjectDetails({ projectId, onClose, onProjectUpdate }) {
     }
     
     try {
-      const updatedProject = await projectAPI.update(projectId, {
+      await projectAPI.update(projectId, {
         ...formData,
         team_member_ids: [...members.map(m => m.user_id), newMemberData.user_id],
         manager_ids: [

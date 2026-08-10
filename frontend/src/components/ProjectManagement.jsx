@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { projectAPI } from "../utils/api";
+import { organizationAPI, projectAPI } from "../utils/api";
 import ProjectDetails from "./ProjectDetails";
 import "./Management.css";
 
 function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
   const [projects, setProjects] = useState([]);
+  const [organizationMembers, setOrganizationMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -27,8 +28,12 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const data = await projectAPI.getAll();
+      const [data, members] = await Promise.all([
+        projectAPI.getAll(),
+        organizationAPI.getMembers().catch(() => []),
+      ]);
       setProjects(data);
+      setOrganizationMembers(members);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -45,12 +50,7 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
       await loadProjects();
       onProjectUpdate(); // Refresh the main board
     } catch (err) {
-      // Handle specific validation errors
-      if (err.message.includes("already enrolled in other projects")) {
-        setError("One or more selected users are already assigned to other projects. Each user can only be in one project at a time.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     }
   };
 
@@ -64,12 +64,7 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
       await loadProjects();
       onProjectUpdate(); // Refresh the main board
     } catch (err) {
-      // Handle specific validation errors
-      if (err.message.includes("already enrolled in other projects")) {
-        setError("One or more selected users are already assigned to other projects. Each user can only be in one project at a time.");
-      } else {
-        setError(err.message);
-      }
+      setError(err.message);
     }
   };
 
@@ -103,11 +98,81 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
       name: project.name,
       description: project.description || "",
       end_date: project.end_date ? project.end_date.split('T')[0] : "",
-      team_member_ids: project.members ? project.members.map(m => m.id) : [],
-      manager_ids: project.members ? project.members.filter(m => m.role === 'manager').map(m => m.id) : []
+      team_member_ids: project.members ? project.members.map(m => m.user_id) : [],
+      manager_ids: project.members ? project.members.filter(m => m.role === 'manager').map(m => m.user_id) : []
     });
     setShowEditForm(true);
   };
+
+  const toggleProjectMember = (userId) => {
+    const normalizedId = Number(userId);
+    setFormData((prev) => {
+      const isSelected = prev.team_member_ids.includes(normalizedId);
+      return {
+        ...prev,
+        team_member_ids: isSelected
+          ? prev.team_member_ids.filter((id) => id !== normalizedId)
+          : [...prev.team_member_ids, normalizedId],
+        manager_ids: isSelected
+          ? prev.manager_ids.filter((id) => id !== normalizedId)
+          : prev.manager_ids,
+      };
+    });
+  };
+
+  const setProjectRole = (userId, role) => {
+    const normalizedId = Number(userId);
+    setFormData((prev) => ({
+      ...prev,
+      team_member_ids: prev.team_member_ids.includes(normalizedId)
+        ? prev.team_member_ids
+        : [...prev.team_member_ids, normalizedId],
+      manager_ids: role === "manager"
+        ? [...new Set([...prev.manager_ids, normalizedId])]
+        : prev.manager_ids.filter((id) => id !== normalizedId),
+    }));
+  };
+
+  const renderMemberSelector = () => (
+    <div className="form-group">
+      <label>Project Members</label>
+      <div className="member-picker">
+        {organizationMembers.length === 0 ? (
+          <p className="picker-empty">Add organization members first, then assign them to projects.</p>
+        ) : (
+          organizationMembers.map((member) => {
+            const selected = member.role === "owner" || formData.team_member_ids.includes(member.user_id);
+            const projectRole = formData.manager_ids.includes(member.user_id) ? "manager" : "member";
+            return (
+              <div className="member-picker-row" key={member.user_id}>
+                <label className="member-check">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    disabled={member.role === "owner"}
+                    onChange={() => toggleProjectMember(member.user_id)}
+                  />
+                  <span>
+                    <strong>{member.username}</strong>
+                    <small>{member.email}</small>
+                  </span>
+                </label>
+                <select
+                  value={member.role === "owner" ? "manager" : projectRole}
+                  disabled={member.role === "owner" || !selected}
+                  onChange={(event) => setProjectRole(member.user_id, event.target.value)}
+                >
+                  <option value="member">Member</option>
+                  <option value="manager">Manager</option>
+                </select>
+              </div>
+            );
+          })
+        )}
+      </div>
+      <p className="form-hint">The Organization Owner is added as a project manager automatically.</p>
+    </div>
+  );
 
   const openProjectDetails = (project) => {
     if (!project || !project.id || project.id === 'undefined' || project.id === undefined) {
@@ -128,13 +193,13 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
     onProjectUpdate(); // Call the parent's update function
   };
 
-  // Check if user can create projects (super admin only)
-  const canCreateProject = userRole === 'super_admin';
+  // Check if user can create projects (organization owner only)
+  const canCreateProject = userRole === 'owner';
   
-  // Check if user can edit/delete project (super admin or project manager)
+  // Check if user can edit/delete project (owner or project manager)
   const canEditProject = (project) => {
-    return userRole === 'super_admin' || 
-           (project.members && project.members.some(m => m.role === 'manager' && m.user_id === userRole));
+    return userRole === 'owner' || 
+           (project.members && project.members.some(m => m.role === 'manager'));
   };
 
   if (loading) {
@@ -265,6 +330,8 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
                     onChange={(e) => setFormData({...formData, end_date: e.target.value})}
                   />
                 </div>
+
+                {renderMemberSelector()}
                 
                 <div className="form-actions">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
@@ -318,6 +385,8 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
                     onChange={(e) => setFormData({...formData, end_date: e.target.value})}
                   />
                 </div>
+
+                {renderMemberSelector()}
                 
                 <div className="form-actions">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowEditForm(false)}>

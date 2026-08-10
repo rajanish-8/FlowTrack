@@ -1,5 +1,5 @@
 from django.db import models
-from django.contrib.auth.models import User, AbstractUser
+from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 
 
@@ -9,16 +9,66 @@ class Account(AbstractUser):
     username = models.CharField(max_length=50, unique=False)
     email = models.EmailField(max_length=100, unique=True)
     profile_picture= models.ImageField(upload_to="Profiles/", blank=True, default="Profiles/default.png", null=True)
+    # Legacy application-level flag. Organization roles now live on OrganizationMembership.
     is_super_admin = models.BooleanField(default=False)
     skills = models.TextField(blank=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
+
+class Organization(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class OrganizationMembership(models.Model):
+    ROLE_OWNER = "owner"
+    ROLE_MANAGER = "manager"
+    ROLE_MEMBER = "member"
+
+    ROLE_CHOICES = [
+        (ROLE_OWNER, "Organization Owner"),
+        (ROLE_MANAGER, "Manager"),
+        (ROLE_MEMBER, "Member"),
+    ]
+
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="memberships")
+    user = models.ForeignKey(Account, on_delete=models.CASCADE, related_name="organization_memberships")
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=ROLE_MEMBER)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["organization", "user"], name="unique_user_per_organization"),
+            models.UniqueConstraint(fields=["user"], name="unique_organization_per_user"),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.organization.name} ({self.role})"
+
+    def clean(self):
+        if self.pk and self.role != self.ROLE_OWNER:
+            old = OrganizationMembership.objects.filter(pk=self.pk).first()
+            if old and old.role == self.ROLE_OWNER:
+                other_owner_exists = OrganizationMembership.objects.filter(
+                    organization=old.organization,
+                    role=self.ROLE_OWNER,
+                ).exclude(pk=self.pk).exists()
+                if not other_owner_exists:
+                    raise ValidationError("Cannot demote the only organization owner.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 class Project(models.Model):
     name = models.CharField(max_length=50)
     description = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(blank=True,null=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name="projects", null=True, blank=True)
     members = models.ManyToManyField(Account, through='ProjectMember', related_name="projects")
     
 class ProjectMember(models.Model):
@@ -34,17 +84,6 @@ class ProjectMember(models.Model):
     
     class Meta:
         unique_together = ('user', 'project')  # Prevent duplicate memberships
-    
-    def clean(self):
-        # Ensure user is only in one project
-        if self.user and self.project:
-            existing_membership = ProjectMember.objects.filter(user=self.user).exclude(pk=self.pk)
-            if existing_membership.exists():
-                raise ValidationError(f"User {self.user.username} is already assigned to another project.")
-    
-    def save(self, *args, **kwargs):
-        self.clean()
-        super().save(*args, **kwargs)
 
 
 class Task(models.Model):

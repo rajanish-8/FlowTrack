@@ -1,243 +1,222 @@
 # FlowTrack
 
-A modern, full-stack Kanban board application for project management built with Django REST Framework and React. FlowTrack provides an intuitive interface for managing projects, tasks, and team collaboration with role-based access control.
+FlowTrack is a full-stack Kanban project management app built with Django REST Framework and React. It supports organization onboarding, role-based workspace access, project and task management, drag-and-drop task movement, profile pictures, and team member assignment.
 
-## 🚀 Features
+## Views
 
-### Core Functionality
-- **Kanban Board Interface**: Drag-and-drop task management with status columns (To Do, In Progress, Review, Done)
-- **Project Management**: Create, update, and manage multiple projects
-- **Task Management**: Create, assign, and track tasks with priorities and due dates
-- **User Authentication**: Secure login/signup with token-based authentication
-- **Role-Based Access Control**: Super Admin, Manager, and Member roles with different permissions
+The frontend has these routed views:
 
-### User Roles & Permissions
-- **Super Admin**: Full system access, can manage all projects and users
-- **Manager**: Can create/update tasks, manage project members, view all project tasks
-- **Member**: Can update assigned tasks (status and priority), view assigned tasks
+1. `/` - Public landing page.
+2. `/create-organization` - Organization Owner onboarding flow.
+3. `/login` - Login view for existing users.
+4. `/signup` - Normal member account signup.
+5. `/pending-invite` - Waiting state for users without organization membership.
+6. `/board` - Main Kanban board.
 
-### Technical Features
-- **Responsive Design**: Mobile-friendly interface with modern UI/UX
-- **Real-time Updates**: Dynamic task status updates and project management
-- **File Uploads**: Profile picture support with image handling
-- **API-First Architecture**: RESTful API with comprehensive endpoints
-- **Database Relationships**: Complex many-to-many relationships with proper constraints
+The main board view changes by role:
 
-## 🛠️ Tech Stack
+- Organization Owner: can manage organization members, projects, project details, manager/member roles, and tasks.
+- Manager: can manage tasks for accessible projects.
+- Member: can view the board and move only tasks assigned to them.
 
-### Backend
-- **Django 5.2.3**: Web framework
-- **Django REST Framework**: API development
-- **SQLite**: Database (development)
-- **Token Authentication**: Secure API access
-- **CORS Support**: Cross-origin resource sharing
+Django `is_staff` and `is_superuser` accounts are platform administrators for Django Admin only. They are separate from Organization Owner accounts.
 
-### Frontend
-- **React 19.1.1**: UI library
-- **Vite**: Build tool and development server
-- **React Router DOM**: Client-side routing
-- **@hello-pangea/dnd**: Drag and drop functionality
-- **Modern CSS**: Responsive design with custom styling
+## Application Screenshots
 
-## 📁 Project Structure
+The screenshots below show the current FlowTrack workflow from public entry to organization ownership, member assignment, project planning, and role-specific boards.
 
-```
+### Landing Page
+
+![FlowTrack landing page](screenshots/landing_page.png)
+
+The landing page introduces FlowTrack with a Kanban preview, role-focused navigation, and clear entry points for signing in, member access, or opening the board when already authenticated.
+
+### Organization Owner Onboarding
+
+![Create organization owner account](screenshots/organization_page.png)
+
+The first onboarding step creates the personal account for the future Organization Owner. This keeps product ownership separate from Django platform administration.
+
+![Create organization details](screenshots/create_organization_page.png)
+
+The second onboarding step collects organization details. Submitting this form creates the organization and assigns the signed-in user the Organization Owner role.
+
+### Owner Dashboard
+
+![Organization Owner dashboard](screenshots/owner_dashboard.png)
+
+The Organization Owner dashboard shows the owner role badge, project selector, organization-level actions, board metrics, and Kanban columns with assigned work.
+
+### Organization Members
+
+![Add organization member by email](screenshots/add_user_by_email.png)
+
+Owners can add existing users by email and choose whether they join as a Manager or Member. The owner role is protected from removal or accidental demotion.
+
+### Project Creation
+
+![Create project with member picker](screenshots/create_project.png)
+
+Project creation includes project details, deadline, member selection, and per-project Manager/Member assignment. The Organization Owner is automatically included as a project manager so tasks always have an available assignee.
+
+### Task Management
+
+![Task management modal](screenshots/task_management.png)
+
+Task management lists each task with status, priority, due date, and assignee. Owners and Managers can create, edit, and delete tasks according to backend permissions.
+
+### Manager Dashboard
+
+![Manager dashboard](screenshots/manager_dashboard.png)
+
+Managers can view the board, manage permitted tasks, and work across their accessible projects without seeing owner-only organization controls.
+
+### Member Dashboard
+
+![Member dashboard](screenshots/member_dashboard.png)
+
+Members see their accessible project board and assigned tasks. The UI reflects reduced permissions, and backend checks prevent owner-only or manager-only actions.
+
+## Features
+
+- Token-based signup and login.
+- Custom user accounts with email login, username, profile picture, and skills.
+- Organization creation flow where the creator becomes Organization Owner.
+- Existing users can be added to an organization by email as Manager or Member.
+- Role-aware board experience for owners, managers, and members.
+- Project creation, editing, deletion, and detail review.
+- Organization member management with owner, manager, and member roles.
+- One-organization-per-user membership rule enforced by the backend.
+- Task creation, editing, deletion, assignment, due dates, priorities, and statuses.
+- Four Kanban statuses: To Do, In Progress, Review, Done.
+- Drag-and-drop task movement with optimistic UI updates.
+- Member-level protection so regular members can move only assigned tasks.
+- Project selector for Organization Owners.
+- Board metrics for total tasks, in-progress tasks, review tasks, and completion rate.
+- Loading, empty, and error states.
+- Responsive UI for desktop, tablet, and mobile screens.
+- REST API helpers for projects, tasks, user role lookup, and Kanban data.
+
+## Tech Stack
+
+Backend:
+
+- Django 5.2.3
+- Django REST Framework
+- SQLite for local development
+- Django token authentication
+- django-cors-headers
+- Pillow for profile image support
+
+Frontend:
+
+- React 19
+- Vite
+- React Router
+- @hello-pangea/dnd
+- Custom CSS design system
+
+## Project Structure
+
+```text
 FlowTrack/
 ├── Backend/
 │   └── flowtrack/
 │       ├── flowtrack/          # Django project settings
-│       ├── kanbanboard/        # Main Django app
-│       │   ├── models.py       # Database models
-│       │   ├── views.py        # API views
-│       │   ├── serializers.py  # Data serialization
-│       │   ├── urls.py         # URL routing
-│       │   └── permissions.py  # Custom permissions
-│       ├── media/              # User uploads
-│       └── manage.py           # Django management
+│       ├── kanbanboard/        # Models, serializers, views, URLs, permissions
+│       ├── db.sqlite3          # Local development database
+│       └── manage.py
+├── api/
+│   └── index.py                # Deployment entrypoint
 ├── frontend/
 │   ├── src/
-│   │   ├── components/         # React components
-│   │   ├── layouts/           # Layout components
-│   │   ├── pages/             # Page components
-│   │   └── utils/             # Utility functions
-│   └── package.json           # Frontend dependencies
+│   │   ├── assets/             # Logo and avatar assets
+│   │   ├── components/         # Task, project, and modal components
+│   │   ├── layouts/            # Header and board layout
+│   │   ├── pages/              # Landing, onboarding, board, login, signup
+│   │   └── utils/api.js        # Frontend API helper methods
+│   └── package.json
 └── README.md
 ```
 
-## 🚀 Getting Started
+## Getting Started
 
-### Prerequisites
-- Python 3.8+
-- Node.js 16+
-- npm or yarn
+### Backend
 
-### Backend Setup
+```bash
+cd Backend/flowtrack
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
 
-1. **Navigate to the backend directory:**
-   ```bash
-   cd Backend/flowtrack
-   ```
+The backend runs at `http://localhost:8000`.
 
-2. **Create a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
+### Frontend
 
-3. **Install dependencies:**
-   ```bash
-   pip install django djangorestframework django-cors-headers pillow
-   ```
+```bash
+cd frontend
+npm install
+printf "VITE_API_BASE_URL=http://localhost:8000\n" > .env
+npm run dev
+```
 
-4. **Run database migrations:**
-   ```bash
-   python manage.py migrate
-   ```
+The frontend runs at `http://localhost:5173`.
 
-5. **Create a superuser:**
-   ```bash
-   python manage.py createsuperuser
-   ```
+## API Endpoints
 
-6. **Start the development server:**
-   ```bash
-   python manage.py runserver
-   ```
+Authentication:
 
-The backend will be available at `http://localhost:8000`
+- `POST /signup/`
+- `POST /login/`
 
-### Frontend Setup
+Organization:
 
-1. **Navigate to the frontend directory:**
-   ```bash
-   cd frontend
-   ```
+- `GET /organization/`
+- `POST /organization/`
+- `GET /organization/members/`
+- `POST /organization/members/`
+- `PATCH /organization/members/{id}/`
+- `DELETE /organization/members/{id}/`
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
+Projects:
 
-3. **Create environment file:**
-   ```bash
-   # Create .env file in frontend directory
-   echo "VITE_API_BASE_URL=http://localhost:8000" > .env
-   ```
+- `GET /projects/`
+- `POST /projects/`
+- `GET /projects/{id}/`
+- `PUT /projects/{id}/`
+- `DELETE /projects/{id}/`
 
-4. **Start the development server:**
-   ```bash
-   npm run dev
-   ```
+Tasks:
 
-The frontend will be available at `http://localhost:5173`
+- `GET /tasks/`
+- `POST /tasks/`
+- `GET /tasks/{id}/`
+- `PUT /tasks/{id}/`
+- `DELETE /tasks/{id}/`
 
-## 📊 Database Models
+Users and board data:
 
-### Account (User Model)
-- Custom user model extending Django's AbstractUser
-- Email-based authentication
-- Profile picture support
-- Skills and role management
+- `GET /kanban-board/`
+- `GET /kanban-board/?project_id={id}`
+- `GET /user-role/`
+- `GET /users/` - organization-scoped users for owners/managers
 
-### Project
-- Project name, description, and timeline
-- Many-to-many relationship with users through ProjectMember
-- Task relationships
+## Data Model
 
-### ProjectMember
-- Junction table for user-project relationships
-- Role-based permissions (Manager/Member)
-- Unique constraint preventing users from joining multiple projects
+- Account: custom Django user with email authentication, profile picture, and skills.
+- Organization: workspace owned by an Organization Owner.
+- OrganizationMembership: connects accounts to one organization with owner, manager, or member role.
+- Project: organization-scoped work area with name, description, creation date, optional end date, and project members.
+- ProjectMember: connects organization users to individual projects and stores their per-project member or manager role.
+- Task: title, description, due date, priority, status, project, and assignee.
 
-### Task
-- Task details with title, description, due date
-- Priority levels (High, Medium, Low)
-- Status tracking (To Do, In Progress, Review, Done)
-- Assignment to project members
+## Notes
 
-## 🔌 API Endpoints
-
-### Authentication
-- `POST /signup/` - User registration
-- `POST /login/` - User authentication
-
-### Projects
-- `GET /projects/` - List projects
-- `POST /projects/` - Create project (Super Admin only)
-- `GET /projects/{id}/` - Get project details
-- `PUT /projects/{id}/` - Update project
-- `DELETE /projects/{id}/` - Delete project
-
-### Tasks
-- `GET /tasks/` - List tasks
-- `POST /tasks/` - Create task
-- `GET /tasks/{id}/` - Get task details
-- `PUT /tasks/{id}/` - Update task
-- `DELETE /tasks/{id}/` - Delete task
-
-### User Management
-- `GET /kanban-board/` - Get user data and projects
-- `GET /user-role/` - Get user roles and permissions
-- `GET /users/` - List all users (Super Admin only)
-
-## 🎨 Frontend Components
-
-### Core Components
-- **Board**: Main application container
-- **Header**: Navigation and user profile
-- **ColumnContainer**: Kanban board layout
-- **TaskCard**: Individual task display
-- **ProjectManagement**: Project CRUD operations
-- **TaskManagement**: Task CRUD operations
-
-### Key Features
-- **Drag & Drop**: Task status updates via drag and drop
-- **Modal Management**: Project and task creation/editing
-- **Responsive Design**: Mobile-first approach
-- **Error Handling**: Comprehensive error states and loading indicators
-
-## 🔒 Security Features
-
-- **Token Authentication**: Secure API access
-- **Role-Based Permissions**: Granular access control
-- **CORS Configuration**: Secure cross-origin requests
-- **Input Validation**: Server-side data validation
-- **SQL Injection Protection**: Django ORM protection
-
-## 🚀 Deployment
-
-### Backend Deployment
-1. Set `DEBUG = False` in settings.py
-2. Configure production database (PostgreSQL recommended)
-3. Set up static file serving
-4. Configure CORS for production domain
-5. Use environment variables for sensitive data
-
-### Frontend Deployment
-1. Build the production bundle: `npm run build`
-2. Serve static files through web server (Nginx/Apache)
-3. Configure API base URL for production
-
-## 🐛 Known Issues
-
-- Users can only be assigned to one project at a time
-- Profile picture uploads require proper media configuration
-- CORS is currently set to allow all origins (development only)
-
-## 🔮 Future Enhancements
-
-- [ ] Real-time notifications
-- [ ] File attachments for tasks
-- [ ] Advanced filtering and search
-- [ ] Project templates
-- [ ] Time tracking
-- [ ] Mobile app
-- [ ] Integration with external tools
-
-## 📞 Support
-
-For support and questions, please open an issue in the GitHub repository.
-
----
-
-**FlowTrack** - Streamline your project management with modern Kanban boards and collaborative tools.
+- Local development uses SQLite.
+- Profile images require media/static configuration in production.
+- CORS settings should be tightened for production deployment.
+- Users are currently constrained to one organization membership, while they can belong to multiple projects inside that organization.
+- Email delivery is not configured; owners add existing signed-up users by email instead of sending invitation emails.

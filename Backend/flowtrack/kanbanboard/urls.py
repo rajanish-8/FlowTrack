@@ -4,6 +4,9 @@ from . import views
 urlpatterns = [
    path('signup/', views.SignupView.as_view(), name="signup"),
    path('login/', views.LoginView.as_view(), name="login"),
+   path('organization/', views.OrganizationView.as_view(), name="organization"),
+   path('organization/members/', views.OrganizationMembersView.as_view(), name="organization-members"),
+   path('organization/members/<int:pk>/', views.OrganizationMemberDetailView.as_view(), name="organization-member-detail"),
    path('kanban-board/', views.KanbanBoardView.as_view(), name="kanban-board"),
    path('user-role/', views.UserRoleView.as_view(), name="user-role"),
    path('users/', views.UsersView.as_view(), name="users"),

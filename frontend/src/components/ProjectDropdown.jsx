@@ -3,8 +3,8 @@ import { useState } from "react";
 function ProjectDropdown({ projects, userRole, selectedProject, onProjectChange }) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Only show dropdown for super admins
-  if (userRole !== 'super_admin') {
+  // Only organization owners can switch across organization projects.
+  if (userRole !== 'owner') {
     return null;
   }
 

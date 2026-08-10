@@ -1,11 +1,13 @@
 import "../login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { API_BASE_URL } from "../utils/api";
+import { API_BASE_URL, userAPI } from "../utils/api";
+import logoAsset from "../assets/flowtrack-logo.svg";
 
 function Login() {
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [feedback, setFeedback] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -15,7 +17,7 @@ function Login() {
   const submit = async (e) => {
     e.preventDefault();
     console.log("login submit", form);
-    alert("Login submitted. Check console for data.");
+    setFeedback("Signing you in...");
    
 
     const formData = new FormData()
@@ -43,14 +45,14 @@ function Login() {
         
         if (responseText.trim() === '') {
           console.log("Empty response body");
-          alert("Server returned empty response. Please try again.");
+          setFeedback("Server returned an empty response. Please try again.");
           return;
         }
         
         // Check if response is HTML (likely an error page)
         if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
           console.error("Server returned HTML instead of JSON. This usually indicates a server error.");
-          alert("Server error occurred. Please check if the backend server is running and try again.");
+          setFeedback("Server error. Please check if the backend server is running.");
           return;
         }
         
@@ -62,9 +64,9 @@ function Login() {
         
         // Check if it's an HTML response
         if (responseText && (responseText.includes('<!DOCTYPE') || responseText.includes('<html'))) {
-          alert("Server error: Received HTML response instead of JSON. Please check if the backend server is running properly.");
+          setFeedback("Server returned HTML instead of JSON. Please check the backend.");
         } else {
-          alert("Server returned invalid response. Please try again.");
+          setFeedback("Server returned an invalid response. Please try again.");
         }
         return;
       }
@@ -72,42 +74,65 @@ function Login() {
       if (response.ok){
         console.log("successfully logged In")
         localStorage.setItem("token",data.token)
-        navigate("/")
+        const roleData = await userAPI.getRoles();
+        navigate(roleData.onboarding_required ? "/pending-invite" : "/board")
       }
       else{
         console.log("Error: ", data)
         if (data.error) {
-          alert(`Login failed: ${data.error}`);
+          setFeedback(`Login failed: ${data.error}`);
         } else {
-          alert("Login failed. Please check your credentials and try again.");
+          setFeedback("Login failed. Please check your credentials and try again.");
         }
       }
 
     }
     catch(err){
       console.log("Network error:", err)
-      alert("Network error. Please check your connection and try again.");
+      setFeedback("Network error. Please check your connection and try again.");
     }
   };
 
   return (
-    <div className="login-page">
-      <header className="login-header">
-        <div className="login-brand">
-          <span>TaskHive</span>
-        </div>
+    <div className="login-page auth-clay-page">
+      <header className="login-header clay-card">
+        <button className="login-brand brand-button" onClick={() => navigate("/")} aria-label="FlowTrack home">
+          <img src={logoAsset} alt="FlowTrack logo" />
+          <span>FlowTrack</span>
+        </button>
         <div className="login-cta">
-          <button className="btn primary" onClick={() => navigate("/signup")}>Sign up</button>
+          <button className="btn clay-button" onClick={() => navigate("/")}>Home</button>
+          <button className="btn primary clay-button" onClick={() => navigate("/signup")}>Sign up</button>
         </div>
       </header>
 
-      <main className="login-hero">
-        <section className="hero-copy">
-          <h1>Welcome back</h1>
-          <p>Log in to access your boards and keep work moving.</p>
+      <main className="login-hero auth-clay-layout">
+        <section className="hero-copy clay-card auth-story-card">
+          <span className="eyebrow">Project delivery workspace</span>
+          <h1>Welcome back to FlowTrack</h1>
+          <p>Open your board, review priorities, and keep every handoff visible.</p>
+          <div className="auth-preview-stack">
+            <div className="auth-mini-card">
+              <strong>4</strong>
+              <span>Kanban lanes</span>
+            </div>
+            <div className="auth-mini-card">
+              <strong>3</strong>
+              <span>Role levels</span>
+            </div>
+            <div className="auth-mini-card">
+              <strong>Live</strong>
+              <span>Task movement</span>
+            </div>
+          </div>
         </section>
 
-        <section className="hero-preview">
+        <section className="hero-preview clay-card auth-form-card">
+          <div className="auth-panel-header">
+            <span>Secure sign in</span>
+            <strong>Team board access</strong>
+          </div>
+          {feedback && <div className="auth-feedback">{feedback}</div>}
           <form className="auth-form" onSubmit={submit}>
             <div className="form-row">
               <label htmlFor="login-email">Email</label>
@@ -145,5 +170,3 @@ function Login() {
 }
 
 export default Login;
-
-

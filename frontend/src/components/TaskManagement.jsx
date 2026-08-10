@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { taskAPI, projectAPI } from "../utils/api";
+import { useState, useEffect, useCallback } from "react";
+import { taskAPI } from "../utils/api";
 import "./Management.css";
 
 function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onClose, editingTaskId }) {
@@ -25,10 +25,19 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
 
   // Auto-open create form if no tasks exist (for better UX)
   useEffect(() => {
-    if (!loading && tasks.length === 0 && (userRole === 'super_admin' || userRole === 'manager')) {
+    if (!loading && tasks.length === 0 && (userRole === 'owner' || userRole === 'manager')) {
       setShowCreateForm(true);
     }
   }, [loading, tasks.length, userRole]);
+
+  // Get project members for assignment dropdown
+  const getProjectMembers = useCallback((projectId) => {
+    if (!projectId || projectId === 'undefined' || projectId === undefined) {
+      return [];
+    }
+    const project = projects.find(p => String(p.id) === String(projectId));
+    return project ? project.members || [] : [];
+  }, [projects]);
 
   // Initialize form with selected project
   useEffect(() => {
@@ -39,6 +48,14 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
       }));
     }
   }, [selectedProject]);
+
+  useEffect(() => {
+    if (!formData.project) return;
+    const members = getProjectMembers(formData.project);
+    if (members.length > 0 && !formData.assigned_to) {
+      setFormData((prev) => ({ ...prev, assigned_to: members[0].id.toString() }));
+    }
+  }, [formData.project, formData.assigned_to, getProjectMembers]);
 
   // Handle editing task from card click
   useEffect(() => {
@@ -127,25 +144,11 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
     setShowEditForm(true);
   };
 
-  // Get project members for assignment dropdown
-  const getProjectMembers = (projectId) => {
-    if (!projectId || projectId === 'undefined' || projectId === undefined) {
-      return [];
-    }
-    const project = projects.find(p => p.id === projectId);
-    return project ? project.members || [] : [];
-  };
+  const selectedProjectMembers = getProjectMembers(formData.project);
 
-  // Check if user can create tasks (super admin or project manager)
-  const canCreateTask = (projectId) => {
-    if (userRole === 'super_admin') return true;
-    if (userRole === 'manager') return true;
-    return false;
-  };
-
-  // Check if user can edit/delete task (super admin or project manager)
-  const canEditTask = (task) => {
-    if (userRole === 'super_admin') return true;
+  // Check if user can edit/delete task (owner or project manager)
+  const canEditTask = () => {
+    if (userRole === 'owner') return true;
     if (userRole === 'manager') return true;
     return false;
   };
@@ -160,7 +163,7 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
         day: 'numeric',
         year: 'numeric'
       });
-    } catch (error) {
+    } catch {
       return dateString;
     }
   };
@@ -212,7 +215,7 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
               fontWeight: tasks.length === 0 ? '600' : '500'
             }}
           >
-            {tasks.length === 0 ? '➕ Create Your First Task' : 'Create New Task'}
+            {tasks.length === 0 ? 'Create Your First Task' : 'Create New Task'}
           </button>
         </div>
 
@@ -315,20 +318,26 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="assigned_to">Assign To</label>
+                  <label htmlFor="assigned_to">Assign To *</label>
                   <select
                     id="assigned_to"
                     value={formData.assigned_to}
                     onChange={(e) => setFormData({...formData, assigned_to: e.target.value})}
-                    disabled={!formData.project}
+                    disabled={!formData.project || selectedProjectMembers.length === 0}
+                    required
                   >
-                    <option value="">Select assignee</option>
-                    {formData.project && getProjectMembers(formData.project).map((member) => (
+                    <option value="">
+                      {!formData.project ? "Select a project first" : selectedProjectMembers.length === 0 ? "No project members available" : "Select assignee"}
+                    </option>
+                    {selectedProjectMembers.map((member) => (
                       <option key={member.id} value={member.id}>
-                        {member.username}
+                        {member.username} ({member.role})
                       </option>
                     ))}
                   </select>
+                  {formData.project && selectedProjectMembers.length === 0 && (
+                    <p className="form-hint">Add members to this project before creating tasks.</p>
+                  )}
                 </div>
                 
                 <div className="form-group">
@@ -358,7 +367,7 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
                   <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="btn btn-primary" disabled={!formData.project || !formData.assigned_to}>
                     Create Task
                   </button>
                 </div>
@@ -415,19 +424,26 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
                 </div>
                 
                 <div className="form-group">
-                  <label htmlFor="edit_assigned_to">Assign To</label>
+                  <label htmlFor="edit_assigned_to">Assign To *</label>
                   <select
                     id="edit_assigned_to"
                     value={formData.assigned_to}
                     onChange={(e) => setFormData({...formData, assigned_to: e.target.value})}
+                    disabled={!formData.project || selectedProjectMembers.length === 0}
+                    required
                   >
-                    <option value="">Select assignee</option>
-                    {getProjectMembers(formData.project).map((member) => (
+                    <option value="">
+                      {!formData.project ? "Select a project first" : selectedProjectMembers.length === 0 ? "No project members available" : "Select assignee"}
+                    </option>
+                    {selectedProjectMembers.map((member) => (
                       <option key={member.id} value={member.id}>
-                        {member.username}
+                        {member.username} ({member.role})
                       </option>
                     ))}
                   </select>
+                  {formData.project && selectedProjectMembers.length === 0 && (
+                    <p className="form-hint">Add members to this project before assigning tasks.</p>
+                  )}
                 </div>
                 
                 <div className="form-group">
@@ -457,7 +473,7 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
                   <button type="button" className="btn btn-secondary" onClick={() => setShowEditForm(false)}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn btn-primary">
+                  <button type="submit" className="btn btn-primary" disabled={!formData.project || !formData.assigned_to}>
                     Update Task
                   </button>
                 </div>

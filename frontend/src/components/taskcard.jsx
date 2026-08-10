@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 import defaultAvatar from "../assets/default-avatar.svg";
 
 function TaskCard({id, title, due_date, priority_level, user_profile_picture, user_username, userRole, onEdit, onDelete, assigned_user_id, current_user_id, isDraggable = true }){
-    const [isDragging, setIsDragging] = useState(false);
     const [isTouchDevice, setIsTouchDevice] = useState(false);
     const priorityModifier = typeof priority_level === "string" ? priority_level.toLowerCase() : "";
     const priorityClassName = `priority-level ${priorityModifier ? `priority-${priorityModifier}` : ""}`.trim();
+    const hasDueDate = Boolean(due_date);
     
     // Detect touch device
     useEffect(() => {
@@ -24,17 +24,17 @@ function TaskCard({id, title, due_date, priority_level, user_profile_picture, us
                 day: 'numeric',
                 year: 'numeric'
             });
-        } catch (error) {
+        } catch {
             return dateString; // Return original if parsing fails
         }
     };
 
     // Check if user can edit/delete this task
-    const canEdit = userRole === 'super_admin' || userRole === 'manager';
+    const canEdit = userRole === 'owner' || userRole === 'manager';
     
     // Check if user can drag this task
     const canDrag = isDraggable && (
-        userRole === 'super_admin' || 
+        userRole === 'owner' || 
         userRole === 'manager' || 
         assigned_user_id === current_user_id
     );
@@ -75,7 +75,7 @@ function TaskCard({id, title, due_date, priority_level, user_profile_picture, us
                       title="Edit task"
                       aria-label="Edit task"
                     >
-                      ✏️
+                      Edit
                     </button>
                     <button 
                       className="task-action-btn delete-btn"
@@ -86,11 +86,12 @@ function TaskCard({id, title, due_date, priority_level, user_profile_picture, us
                       title="Delete task"
                       aria-label="Delete task"
                     >
-                      🗑️
+                      Delete
                     </button>
                   </div>
                 )}
             </div>
+            <div className="task-card-accent" />
             <div className="task-footer">
                 <div className="assignee-info">
                     <img 
@@ -103,7 +104,7 @@ function TaskCard({id, title, due_date, priority_level, user_profile_picture, us
                 </div>
                 <div className="task-meta">
                     <span className={priorityClassName}>{priority_level}</span>
-                    <div className="due-date">{formatDate(due_date)}</div>
+                    <div className={`due-date ${hasDueDate ? "has-date" : ""}`}>{formatDate(due_date)}</div>
                 </div>
             </div>
            </div>

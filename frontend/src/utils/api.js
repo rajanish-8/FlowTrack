@@ -148,3 +148,59 @@ export const userAPI = {
     return handleApiResponse(response);
   },
 };
+
+export const organizationAPI = {
+  getCurrent: async () => {
+    const response = await fetch(`${API_BASE_URL}/organization/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  create: async (organizationData) => {
+    const response = await fetch(`${API_BASE_URL}/organization/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(organizationData),
+    });
+    return handleApiResponse(response);
+  },
+
+  getMembers: async () => {
+    const response = await fetch(`${API_BASE_URL}/organization/members/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  addMember: async (memberData) => {
+    const response = await fetch(`${API_BASE_URL}/organization/members/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(memberData),
+    });
+    return handleApiResponse(response);
+  },
+
+  updateMember: async (membershipId, memberData) => {
+    const response = await fetch(`${API_BASE_URL}/organization/members/${membershipId}/`, {
+      method: "PATCH",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(memberData),
+    });
+    return handleApiResponse(response);
+  },
+
+  removeMember: async (membershipId) => {
+    const response = await fetch(`${API_BASE_URL}/organization/members/${membershipId}/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    if (response.status === 204) {
+      return {};
+    }
+    return handleApiResponse(response);
+  },
+};

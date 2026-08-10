@@ -2,10 +2,13 @@ import TaskCard from "./taskcard"
 import { Droppable } from "@hello-pangea/dnd"
 
 function Column({column_name, tasks, userRole, onEditTask, onDeleteTask, current_user_id}){
+  const statusClass = column_name.toLowerCase().replace(/\s+/g, "-");
+
   return(
-    <div className="column">
+    <div className={`column column-${statusClass}`}>
       <div className="column-header">
         <h3>{column_name}</h3>
+        <span className="column-count">{tasks.length}</span>
       </div>
       
       <Droppable droppableId={column_name} type="TASK">
@@ -31,6 +34,9 @@ function Column({column_name, tasks, userRole, onEditTask, onDeleteTask, current
                 current_user_id={current_user_id}
               /> 
             ))}
+            {tasks.length === 0 && (
+              <div className="empty-column-note">Drop tasks here</div>
+            )}
             {provided.placeholder}
           </div>
         )}

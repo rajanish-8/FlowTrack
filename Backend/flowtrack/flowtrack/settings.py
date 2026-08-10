@@ -32,7 +32,7 @@ DEBUG = os.environ.get('DJANGO_DEBUG', DEFAULT_DEBUG).lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get(
     'DJANGO_ALLOWED_HOSTS',
-    'flowtrack-production-ecbb.up.railway.app'
+    'flowtrack-production-ecbb.up.railway.app,localhost,127.0.0.1'
 ).split(',')
 
 # Application definition
@@ -151,9 +151,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = {
-    "https://flow-track-eight-chi.vercel.app",
-}
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOWED_ORIGINS = os.environ.get(
+    'CORS_ALLOWED_ORIGINS',
+    'https://flow-track-eight-chi.vercel.app,http://localhost:5173,http://127.0.0.1:5173'
+).split(',')
 CORS_ALLOW_CREDENTIALS = True
 
 # REST Framework settings

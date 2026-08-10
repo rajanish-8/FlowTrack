@@ -251,6 +251,65 @@
   min-height: 80px;
 }
 
+.form-hint {
+  margin-top: 6px;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.member-picker {
+  display: grid;
+  gap: 10px;
+  max-height: 260px;
+  overflow: auto;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.member-picker-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 130px;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.member-check {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.member-check span {
+  display: grid;
+  min-width: 0;
+}
+
+.member-check strong,
+.member-check small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.member-check small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.picker-empty {
+  color: #64748b;
+  font-weight: 700;
+  text-align: center;
+}
+
 .form-actions {
   display: flex;
   gap: 10px;
@@ -881,5 +940,217 @@
   
   .form-group textarea {
     min-height: 50px;
+  }
+}
+
+/* 2026 management refresh */
+.modal-overlay {
+  padding: 18px;
+  background:
+    radial-gradient(circle at 24% 18%, rgba(37, 99, 235, 0.18), transparent 26%),
+    rgba(15, 23, 42, 0.48);
+  backdrop-filter: blur(8px);
+}
+
+.modal-content {
+  border: 1px solid rgba(219, 227, 239, 0.94);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 28px 80px rgba(15, 23, 42, 0.22);
+}
+
+.modal-header {
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.modal-header h2,
+.modal-header h3 {
+  color: var(--text);
+  letter-spacing: 0;
+}
+
+.close-btn {
+  border-radius: 999px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  font-weight: 700;
+}
+
+.close-btn:hover {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border-color: var(--danger-border);
+}
+
+.project-management,
+.task-management,
+.project-details {
+  width: min(960px, 94vw);
+}
+
+.project-actions,
+.task-actions,
+.task-management .task-actions,
+.project-management .project-actions {
+  opacity: 1;
+}
+
+.project-cards,
+.task-cards,
+.members-list {
+  gap: 12px;
+}
+
+.project-card,
+.task-card,
+.member-card,
+.project-info-section,
+.members-section {
+  border-color: rgba(219, 227, 239, 0.95);
+  border-radius: 8px;
+  background: linear-gradient(180deg, #ffffff, #f8fafc);
+  box-shadow: 0 8px 22px rgba(31, 41, 55, 0.06);
+}
+
+.project-card,
+.task-card {
+  gap: 16px;
+}
+
+.project-info h4,
+.task-info h4,
+.member-name {
+  color: var(--text);
+  letter-spacing: 0;
+}
+
+.project-description,
+.task-description,
+.member-email,
+.project-meta,
+.task-meta {
+  color: var(--text-muted);
+}
+
+.task-status,
+.task-priority,
+.task-due-date,
+.task-assignee,
+.project-members,
+.project-end-date {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #eef4ff;
+  color: var(--primary-text);
+  font-weight: 800;
+}
+
+.task-priority {
+  background: var(--accent-bg);
+  color: var(--accent-foreground);
+  text-transform: capitalize;
+}
+
+.project-form,
+.task-form {
+  gap: 16px;
+}
+
+.form-group {
+  gap: 6px;
+}
+
+.form-group label,
+.field-group label {
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.form-input,
+.form-textarea,
+.role-select {
+  border-radius: 8px;
+  border-color: var(--border);
+  background: #fbfdff;
+  color: var(--text);
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.form-input:focus,
+.form-textarea:focus,
+.role-select:focus {
+  border-color: var(--brand-strong);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.field-value {
+  border-radius: 8px;
+  border-color: var(--border);
+  background: #f8fafc;
+}
+
+.btn {
+  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.btn-primary {
+  background: var(--brand-strong);
+  border: 1px solid var(--brand-strong);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: var(--primary-text);
+  border: 1px solid rgba(37, 99, 235, 0.22);
+}
+
+.btn-danger {
+  background: var(--danger-bg);
+  color: var(--danger-text);
+  border: 1px solid var(--danger-border);
+}
+
+.btn-danger:hover {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.error-message {
+  border-radius: 8px;
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+}
+
+.no-projects,
+.no-tasks,
+.no-members {
+  border: 1px dashed rgba(100, 116, 139, 0.3);
+  border-radius: 8px;
+  background: #f8fafc;
+  font-style: normal;
+  font-weight: 700;
+}
+
+@media (max-width: 767px) {
+  .modal-overlay {
+    padding: 10px;
+  }
+
+  .project-management,
+  .task-management,
+  .project-details {
+    width: 100%;
   }
 }

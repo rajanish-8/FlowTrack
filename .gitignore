@@ -1,15 +1,28 @@
 # Python
 __pycache__/
 *.pyc
+.venv/
 myvenv/
 venv/
+*.sqlite3
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Node
 node_modules/
 dist/
 build/
+.vite/
 
 # General
 .env
+.env.*
 *.log
 .vercel
+.DS_Store
+
+# User-uploaded media. Keep committed defaults/assets elsewhere.
+Backend/flowtrack/media/uploads/
+Backend/flowtrack/media/Profiles/*
+!Backend/flowtrack/media/Profiles/default.png

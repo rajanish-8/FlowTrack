@@ -3,41 +3,50 @@ from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
-from .models import Account, Project, ProjectMember, Task
+from .models import Account, Organization, OrganizationMembership, Project, ProjectMember, Task
 
 # Custom User Admin for Account model
 @admin.register(Account)
 class AccountAdmin(UserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'is_super_admin', 'is_active', 'date_joined')
-    list_filter = ('is_super_admin', 'is_active', 'is_staff', 'date_joined')
+    list_display = ('username', 'email', 'first_name', 'last_name', 'is_staff', 'is_superuser', 'is_active', 'date_joined')
+    list_filter = ('is_active', 'is_staff', 'is_superuser', 'date_joined')
     search_fields = ('username', 'email', 'first_name', 'last_name')
     ordering = ('-date_joined',)
     
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
         ('Personal info', {'fields': ('first_name', 'last_name', 'email', 'profile_picture', 'skills')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_super_admin', 'groups', 'user_permissions')}),
+        ('Platform permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'password1', 'password2', 'is_super_admin'),
+            'fields': ('username', 'email', 'password1', 'password2'),
         }),
     )
     
-    actions = ['make_super_admin', 'remove_super_admin']
-    
-    def make_super_admin(self, request, queryset):
-        queryset.update(is_super_admin=True)
-        self.message_user(request, f"{queryset.count()} user(s) made super admin.")
-    make_super_admin.short_description = "Make selected users super admin"
-    
-    def remove_super_admin(self, request, queryset):
-        queryset.update(is_super_admin=False)
-        self.message_user(request, f"{queryset.count()} user(s) removed from super admin.")
-    remove_super_admin.short_description = "Remove super admin from selected users"
+@admin.register(Organization)
+class OrganizationAdmin(admin.ModelAdmin):
+    list_display = ('name', 'member_count', 'project_count', 'created_at')
+    search_fields = ('name', 'description')
+    readonly_fields = ('created_at',)
+
+    def member_count(self, obj):
+        return obj.memberships.count()
+    member_count.short_description = "Members"
+
+    def project_count(self, obj):
+        return obj.projects.count()
+    project_count.short_description = "Projects"
+
+@admin.register(OrganizationMembership)
+class OrganizationMembershipAdmin(admin.ModelAdmin):
+    list_display = ('user', 'organization', 'role', 'joined_at')
+    list_filter = ('role', 'joined_at', 'organization')
+    search_fields = ('user__email', 'user__username', 'organization__name')
+    readonly_fields = ('joined_at',)
 
 # Project Admin
 @admin.register(Project)

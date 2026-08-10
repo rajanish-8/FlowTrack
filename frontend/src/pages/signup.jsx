@@ -2,6 +2,7 @@ import "../login.css";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE_URL } from "../utils/api";
+import logoAsset from "../assets/flowtrack-logo.svg";
 
 function Signup() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ function Signup() {
   });
   const [profileFile, setProfileFile] = useState(null);
   const [profilePreviewUrl, setProfilePreviewUrl] = useState("");
+  const [feedback, setFeedback] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,11 +35,7 @@ function Signup() {
 
  const submit = async (e) => {
     e.preventDefault();
-    const payload = {
-      ...form,
-      profilePicture: profileFile ? profileFile.name : null,
-    };
-    
+   setFeedback("Creating your account...");
    const formData = new FormData() 
     //handling form data
    formData.append("first_name", form.firstName);
@@ -51,7 +49,7 @@ function Signup() {
   }
 
     if (!API_BASE_URL) {
-      alert("API base URL is not configured. Please set VITE_API_BASE_URL in your .env file.");
+      setFeedback("API base URL is not configured. Please set VITE_API_BASE_URL in your .env file.");
       return;
     }
 
@@ -75,14 +73,14 @@ function Signup() {
         
         if (responseText.trim() === '') {
           console.log("Empty response body");
-          alert("Server returned empty response. Please try again.");
+          setFeedback("Server returned an empty response. Please try again.");
           return;
         }
         
         // Check if response is HTML (likely an error page)
         if (responseText.trim().startsWith('<!DOCTYPE') || responseText.trim().startsWith('<html')) {
           console.error("Server returned HTML instead of JSON. This usually indicates a server error.");
-          alert("Server error occurred. Please check if the backend server is running and try again.");
+          setFeedback("Server error. Please check if the backend server is running.");
           return;
         }
         
@@ -94,53 +92,75 @@ function Signup() {
         
         // Check if it's an HTML response
         if (responseText && (responseText.includes('<!DOCTYPE') || responseText.includes('<html'))) {
-          alert("Server error: Received HTML response instead of JSON. Please check if the backend server is running properly.");
+          setFeedback("Server returned HTML instead of JSON. Please check the backend.");
         } else {
-          alert("Server returned invalid response. Please try again.");
+          setFeedback("Server returned an invalid response. Please try again.");
         }
         return;
       }
 
       if(response.ok){
-        alert("Account created successfully! Redirecting to login...");
+        setFeedback("Account created successfully. Redirecting to login...");
         navigate("/login");
       } else {
         // Handle validation errors
         if(data.email) {
-          alert(`Error: ${data.email[0]}`);
+          setFeedback(`Error: ${data.email[0]}`);
         } else if(data.error) {
-          alert(`Error: ${data.error[0]}`);
+          setFeedback(`Error: ${data.error[0]}`);
         } else {
-          alert("Signup failed. Please check your information and try again.");
+          setFeedback("Signup failed. Please check your information and try again.");
         }
       }
 } 
 catch (err) {
   console.error("Network error:", err);
-  alert("Network error. Please try again.");
+  setFeedback("Network error. Please try again.");
 }
 
 
   };
 
   return (
-    <div className="login-page">
-      <header className="login-header">
-        <div className="login-brand">
-          <span>TaskHive</span>
-        </div>
+    <div className="login-page auth-clay-page">
+      <header className="login-header clay-card">
+        <button className="login-brand brand-button" onClick={() => navigate("/")} aria-label="FlowTrack home">
+          <img src={logoAsset} alt="FlowTrack logo" />
+          <span>FlowTrack</span>
+        </button>
         <div className="login-cta">
-          <button className="btn" onClick={() => navigate("/login")}>Log in</button>
+          <button className="btn clay-button" onClick={() => navigate("/")}>Home</button>
+          <button className="btn primary clay-button" onClick={() => navigate("/login")}>Log in</button>
         </div>
       </header>
 
-      <main className="login-hero">
-        <section className="hero-copy">
-          <h1>Create your account</h1>
-          <p>Join TaskHive to organize projects and collaborate with your team.</p>
+      <main className="login-hero auth-clay-layout">
+        <section className="hero-copy clay-card auth-story-card">
+          <span className="eyebrow">Join the workspace</span>
+          <h1>Create your member account</h1>
+          <p>Add your profile and skills. An Organization Owner can add your email to their workspace after signup.</p>
+          <div className="auth-preview-stack">
+            <div className="auth-mini-card">
+              <strong>Profile</strong>
+              <span>Photo and identity</span>
+            </div>
+            <div className="auth-mini-card">
+              <strong>Skills</strong>
+              <span>Team context</span>
+            </div>
+            <div className="auth-mini-card">
+              <strong>Board</strong>
+              <span>Ready after login</span>
+            </div>
+          </div>
         </section>
 
-        <section className="hero-preview">
+        <section className="hero-preview clay-card auth-form-card">
+          <div className="auth-panel-header">
+            <span>New teammate</span>
+            <strong>Profile setup</strong>
+          </div>
+          {feedback && <div className="auth-feedback">{feedback}</div>}
           <form className="auth-form" onSubmit={submit}>
             <div className="form-row">
               <label htmlFor="first-name">First name</label>
@@ -216,8 +236,9 @@ catch (err) {
                 onChange={handleFileChange}
               />
               {profilePreviewUrl && (
-                <div className="preview-card" style={{ marginTop: "8px" }}>
-                  <img src={profilePreviewUrl} alt="Preview" style={{ width: "64px", height: "64px", borderRadius: "50%" }} />
+                <div className="profile-preview-card">
+                  <img src={profilePreviewUrl} alt="Preview" />
+                  <span>Profile preview</span>
                 </div>
               )}
             </div>
@@ -234,5 +255,3 @@ catch (err) {
 }
 
 export default Signup;
-
-

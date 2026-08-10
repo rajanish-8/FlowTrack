@@ -1,20 +1,18 @@
 import logoAsset from "../assets/flowtrack-logo.svg";
 import defaultAvatar from "../assets/default-avatar.svg";
-import { useState } from "react";
 
-function Header({ userData }){
+function Header({ userData, userRole }){
  const logo_path = logoAsset;
- const [showUserMenu, setShowUserMenu] = useState(false);
+ const roleLabel = {
+   owner: "Organization Owner",
+   manager: "Manager",
+   member: "Member",
+ }[userRole] || "Workspace";
  
  // Handle logout functionality
  const handleLogout = () => {
    localStorage.removeItem("token");
    window.location.href = "/login";
- };
-
- // Toggle user menu on mobile
- const toggleUserMenu = () => {
-   setShowUserMenu(!showUserMenu);
  };
 
  return(
@@ -37,12 +35,11 @@ function Header({ userData }){
         <div className="user-profile">
             {userData ? (
                 <div className="user-info">
+                    <span className="role-badge">{roleLabel}</span>
                     <img 
                         src={userData.profile_picture || defaultAvatar} 
                         alt="User profile" 
                         className="user-avatar"
-                        onClick={toggleUserMenu}
-                        style={{ cursor: 'pointer' }}
                     />
                     <span className="username">{userData.username}</span>
                     <button 
@@ -55,6 +52,7 @@ function Header({ userData }){
                 </div>
             ) : (
                 <div className="user-info">
+                    <span className="role-badge">{roleLabel}</span>
                     <img 
                         src={defaultAvatar} 
                         alt="Default profile" 

@@ -9,19 +9,28 @@
   -moz-osx-font-smoothing: grayscale;
 
   /* Colors (light) */
-  --bg: #f6f7fb;                 /* page background */
+  --bg: #f4f7fb;                 /* page background */
   --panel: #ffffff;              /* cards/columns */
-  --text: #0f172a;               /* primary text */
+  --panel-soft: #f8fafc;
+  --text: #111827;               /* primary text */
   --text-muted: #64748b;         /* secondary text */
-  --border: #e5e7eb;             /* subtle borders */
-  --shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+  --border: #dbe3ef;             /* subtle borders */
+  --border-hover: #b8c5d8;
+  --shadow: 0 12px 36px rgba(31, 41, 55, 0.08);
+  --shadow-soft: 0 8px 24px rgba(31, 41, 55, 0.06);
 
   /* Brand */
   --brand: #2563eb;
+  --brand-strong: #0f62fe;
   --primary: #2563eb;
-  --primary-bg: #dbeafe;
-  --primary-text: #1e40af;
+  --primary-bg: #e0ecff;
+  --primary-text: #174ea6;
   --primary-hover: #1d4ed8;
+  --accent: #14b8a6;
+  --accent-bg: #d8fbf4;
+  --accent-foreground: #0f766e;
+  --warning: #f59e0b;
+  --violet: #7c3aed;
 
   /* Danger colors */
   --danger-bg: #fee2e2;
@@ -38,7 +47,7 @@
 
   /* Radii and spacing */
   --radius: 8px;
-  --radius-lg: 16px;
+  --radius-lg: 8px;
   --radius-md: 12px;
   --radius-sm: 9999px; /* pill */
   --space-1: 4px;

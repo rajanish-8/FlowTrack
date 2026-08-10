@@ -4,6 +4,7 @@ import Header from "../layouts/header";
 import ColumnContainer from "../layouts/column_container";
 import ProjectManagement from "../components/ProjectManagement";
 import TaskManagement from "../components/TaskManagement";
+import OrganizationMembers from "../components/OrganizationMembers";
 import { userAPI } from "../utils/api";
 
 function Board() {
@@ -15,6 +16,7 @@ function Board() {
   const [error, setError] = useState(null);
   const [showProjectManagement, setShowProjectManagement] = useState(false);
   const [showTaskManagement, setShowTaskManagement] = useState(false);
+  const [showOrganizationMembers, setShowOrganizationMembers] = useState(false);
   const navigate = useNavigate();
 
   // Authentication check and data fetching
@@ -32,6 +34,11 @@ function Board() {
         // Fetch user data and projects from backend
         const data = await userAPI.getKanbanData();
         console.log("Fetched user data:", data);
+
+        if (data.onboarding_required) {
+          navigate("/pending-invite");
+          return;
+        }
 
         // Set user data and projects
         setUserData(data.user_details);
@@ -118,7 +125,7 @@ function Board() {
   if (loading) {
     return (
       <div className='App'>
-        <Header userData={userData} />
+        <Header userData={userData} userRole={userRole} />
         <div className="loading-container">
           <div className="loading-spinner"></div>
           <p>Loading your boards...</p>
@@ -131,7 +138,7 @@ function Board() {
   if (error) {
     return (
       <div className='App'>
-        <Header userData={userData} />
+        <Header userData={userData} userRole={userRole} />
         <div className="error-container">
           <h2>Oops! Something went wrong</h2>
           <p>{error}</p>
@@ -150,6 +157,7 @@ function Board() {
     <div className='App'>
       <Header 
         userData={userData} 
+        userRole={userRole}
       />
       <ColumnContainer 
         allProjects={projects}
@@ -160,6 +168,7 @@ function Board() {
         onProjectChange={handleProjectChange}
         onProjectManagement={handleProjectManagement}
         onTaskManagement={handleTaskManagement}
+        onOrganizationMembers={() => setShowOrganizationMembers(true)}
       />
       
       {/* Management Modals */}
@@ -175,15 +184,17 @@ function Board() {
         <TaskManagement
           userRole={userRole}
           projects={projects}
+          selectedProject={selectedProject}
           onTaskUpdate={handleTaskUpdate}
           onClose={handleCloseTaskManagement}
         />
+      )}
+
+      {showOrganizationMembers && (
+        <OrganizationMembers onClose={() => setShowOrganizationMembers(false)} />
       )}
     </div>
   );
 }
 
 export default Board;
-
-
-
