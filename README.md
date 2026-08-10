@@ -217,6 +217,4 @@ Users and board data:
 
 - Local development uses SQLite.
 - Profile images require media/static configuration in production.
-- CORS settings should be tightened for production deployment.
 - Users are currently constrained to one organization membership, while they can belong to multiple projects inside that organization.
-- Email delivery is not configured; owners add existing signed-up users by email instead of sending invitation emails.
