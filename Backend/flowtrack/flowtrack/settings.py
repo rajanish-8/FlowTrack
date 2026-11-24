@@ -99,12 +99,14 @@ WSGI_APPLICATION = 'flowtrack.wsgi.application'
 if os.environ.get('DATABASE_URL'):
     import dj_database_url
 
+    parsed_db = dj_database_url.parse(
+        os.environ['DATABASE_URL'],
+        conn_max_age=600,
+    )
+    if not parsed_db.get('ENGINE', '').endswith('sqlite3'):
+        parsed_db.setdefault('OPTIONS', {})['sslmode'] = 'require'
     DATABASES = {
-        'default': dj_database_url.parse(
-            os.environ['DATABASE_URL'],
-            conn_max_age=600,
-            ssl_require=True,
-        )
+        'default': parsed_db
     }
 else:
     DATABASES = {
