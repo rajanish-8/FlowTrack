@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
-import { taskAPI } from "../utils/api";
+import { taskAPI, aiAPI } from "../utils/api";
+import { startVoiceRecognition, isSpeechSupported } from "../utils/speech";
 import "./Management.css";
+import "./AIComponents.css";
 
 function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onClose, editingTaskId }) {
   const [tasks, setTasks] = useState([]);
@@ -15,8 +17,101 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
     due_date: "",
     priority: "low",
     project: "",
-    assigned_to: ""
+    assigned_to: "",
+    estimated_hours: 0,
+    recurrence: "none",
   });
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiSubtasks, setAiSubtasks] = useState([]);
+  const [aiStatusMessage, setAiStatusMessage] = useState("");
+  const [isListeningTitle, setIsListeningTitle] = useState(false);
+
+  const handleVoiceTitle = () => {
+    if (isListeningTitle) return;
+    setIsListeningTitle(true);
+    startVoiceRecognition({
+      onResult: (text) => {
+        setFormData((prev) => ({ ...prev, title: text }));
+      },
+      onError: (err) => {
+        console.warn("Speech error:", err);
+        setIsListeningTitle(false);
+      },
+      onEnd: () => {
+        setIsListeningTitle(false);
+      },
+    });
+  };
+
+  const handleAIEnhance = async () => {
+    if (!formData.title?.trim()) return;
+    try {
+      setAiLoading(true);
+      setAiStatusMessage("✨ Enhancing task with AI...");
+      const res = await aiAPI.enhanceTask({
+        title: formData.title,
+        description: formData.description,
+        project_id: formData.project,
+      });
+      setFormData((prev) => ({
+        ...prev,
+        title: res.enhanced_title || prev.title,
+        description: res.description || prev.description,
+        priority: res.suggested_priority || prev.priority,
+      }));
+      setAiStatusMessage(`Enhanced with ${res.ai_powered_by}!`);
+      setTimeout(() => setAiStatusMessage(""), 3500);
+    } catch {
+      setAiStatusMessage("⚠️ Could not enhance task with AI.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAIBreakdown = async () => {
+    if (!formData.title?.trim()) return;
+    try {
+      setAiLoading(true);
+      setAiStatusMessage("🪄 Generating subtasks with AI...");
+      const res = await aiAPI.breakdownTask({
+        title: formData.title,
+        description: formData.description,
+      });
+      setAiSubtasks(res.subtasks || []);
+      setAiStatusMessage(`Decomposed into ${res.subtasks?.length || 0} subtasks!`);
+    } catch {
+      setAiStatusMessage("⚠️ Could not decompose task with AI.");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
+  const handleAddAllSubtasks = async () => {
+    if (!aiSubtasks.length || !formData.project) return;
+    try {
+      setAiLoading(true);
+      const members = getProjectMembers(formData.project);
+      const defaultAssignee = members[0]?.id || "";
+      for (const st of aiSubtasks) {
+        await taskAPI.create({
+          title: st.title.slice(0, 50),
+          description: `Auto-generated subtask for: ${formData.title}`,
+          priority: st.priority || "medium",
+          project: formData.project,
+          assigned_to: formData.assigned_to || defaultAssignee,
+        });
+      }
+      setAiSubtasks([]);
+      setShowCreateForm(false);
+      resetForm();
+      await loadTasks();
+      onTaskUpdate();
+    } catch (err) {
+      setError("Failed to create subtasks: " + err.message);
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   // Load tasks on component mount
   useEffect(() => {
@@ -127,7 +222,9 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
       due_date: "",
       priority: "low",
       project: selectedProject ? selectedProject.id.toString() : "",
-      assigned_to: ""
+      assigned_to: "",
+      estimated_hours: 0,
+      recurrence: "none",
     });
   };
 
@@ -139,7 +236,9 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
       due_date: task.due_date ? task.due_date.split('T')[0] : "",
       priority: task.priority || "low",
       project: task.project,
-      assigned_to: task.assigned_to ? task.assigned_to.id : ""
+      assigned_to: task.assigned_to ? task.assigned_to.id : "",
+      estimated_hours: task.estimated_hours || 0,
+      recurrence: task.recurrence || "none",
     });
     setShowEditForm(true);
   };
@@ -280,15 +379,100 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
               </div>
               <form onSubmit={handleCreateTask} className="task-form">
                 <div className="form-group">
-                  <label htmlFor="title">Task Title *</label>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                    <label htmlFor="title" style={{ margin: 0 }}>Task Title *</label>
+                    {isSpeechSupported() && (
+                      <button
+                        type="button"
+                        onClick={handleVoiceTitle}
+                        style={{
+                          background: isListeningTitle ? "#ef4444" : "var(--brand, #4f46e5)",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "9999px",
+                          padding: "2px 8px",
+                          fontSize: "0.72rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          transition: "all 0.15s ease",
+                        }}
+                        title="Click to speak task title"
+                      >
+                        🎙️ {isListeningTitle ? "Listening..." : "Dictate Title"}
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="text"
                     id="title"
                     value={formData.title}
                     onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    placeholder="e.g. Build authentication flow"
                     required
                   />
                 </div>
+
+                <div className="ai-action-btn-group">
+                  <button
+                    type="button"
+                    className="ai-btn-enhance"
+                    onClick={handleAIEnhance}
+                    disabled={aiLoading || !formData.title.trim()}
+                    title="Generate detailed description, acceptance checklist, and optimal priority"
+                  >
+                    ✨ AI Auto-Fill & Enhance
+                  </button>
+                  <button
+                    type="button"
+                    className="ai-btn-breakdown"
+                    onClick={handleAIBreakdown}
+                    disabled={aiLoading || !formData.title.trim()}
+                    title="Decompose into 3-5 subtasks with automatic creation"
+                  >
+                    🪄 AI Breakdown into Subtasks
+                  </button>
+                </div>
+                {aiStatusMessage && (
+                  <p className="form-hint" style={{ color: "#7c3aed", fontWeight: 600, margin: "-6px 0 10px 0" }}>
+                    {aiStatusMessage}
+                  </p>
+                )}
+
+                {aiSubtasks.length > 0 && (
+                  <div
+                    className="ai-subtasks-box"
+                    style={{
+                      background: "#fdf2f8",
+                      padding: "12px 16px",
+                      borderRadius: "14px",
+                      border: "1px solid #fbcfe8",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    <h5 style={{ margin: "0 0 8px 0", color: "#be185d", fontSize: "0.9rem" }}>
+                      ✨ AI Generated {aiSubtasks.length} Actionable Subtasks:
+                    </h5>
+                    <ul style={{ margin: "0 0 10px 0", paddingLeft: "18px", fontSize: "0.84rem", color: "#334155" }}>
+                      {aiSubtasks.map((st, i) => (
+                        <li key={i} style={{ marginBottom: "4px" }}>
+                          <strong>{st.title}</strong> — <em>Priority: {st.priority} ({st.estimated_hours}h)</em>
+                        </li>
+                      ))}
+                    </ul>
+                    <button
+                      type="button"
+                      className="btn primary"
+                      style={{ fontSize: "0.82rem", padding: "6px 14px", background: "#db2777" }}
+                      onClick={handleAddAllSubtasks}
+                      disabled={aiLoading}
+                    >
+                      🚀 Add All {aiSubtasks.length} Subtasks to Board Now
+                    </button>
+                  </div>
+                )}
                 
                 <div className="form-group">
                   <label htmlFor="description">Description</label>
@@ -362,6 +546,34 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
                     onChange={(e) => setFormData({...formData, due_date: e.target.value})}
                   />
                 </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="form-group">
+                    <label htmlFor="estimated_hours">Est. Hours (taskcoach)</label>
+                    <input
+                      type="number"
+                      id="estimated_hours"
+                      step="0.5"
+                      min="0"
+                      value={formData.estimated_hours || 0}
+                      onChange={(e) => setFormData({ ...formData, estimated_hours: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="recurrence">Recurrence (django-todo)</label>
+                    <select
+                      id="recurrence"
+                      value={formData.recurrence || "none"}
+                      onChange={(e) => setFormData({ ...formData, recurrence: e.target.value })}
+                    >
+                      <option value="none">None</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="weekdays">Weekdays</option>
+                    </select>
+                  </div>
+                </div>
                 
                 <div className="form-actions">
                   <button type="button" className="btn btn-secondary" onClick={() => setShowCreateForm(false)}>
@@ -386,7 +598,32 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
               </div>
               <form onSubmit={handleEditTask} className="task-form">
                 <div className="form-group">
-                  <label htmlFor="edit_title">Task Title *</label>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "4px" }}>
+                    <label htmlFor="edit_title" style={{ margin: 0 }}>Task Title *</label>
+                    {isSpeechSupported() && (
+                      <button
+                        type="button"
+                        onClick={handleVoiceTitle}
+                        style={{
+                          background: isListeningTitle ? "#ef4444" : "var(--brand, #4f46e5)",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "9999px",
+                          padding: "2px 8px",
+                          fontSize: "0.72rem",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "4px",
+                          transition: "all 0.15s ease",
+                        }}
+                        title="Click to speak task title"
+                      >
+                        🎙️ {isListeningTitle ? "Listening..." : "Dictate Title"}
+                      </button>
+                    )}
+                  </div>
                   <input
                     type="text"
                     id="edit_title"
@@ -467,6 +704,34 @@ function TaskManagement({ userRole, projects, selectedProject, onTaskUpdate, onC
                     value={formData.due_date}
                     onChange={(e) => setFormData({...formData, due_date: e.target.value})}
                   />
+                </div>
+
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+                  <div className="form-group">
+                    <label htmlFor="edit_estimated_hours">Est. Hours (taskcoach)</label>
+                    <input
+                      type="number"
+                      id="edit_estimated_hours"
+                      step="0.5"
+                      min="0"
+                      value={formData.estimated_hours || 0}
+                      onChange={(e) => setFormData({ ...formData, estimated_hours: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="edit_recurrence">Recurrence (django-todo)</label>
+                    <select
+                      id="edit_recurrence"
+                      value={formData.recurrence || "none"}
+                      onChange={(e) => setFormData({ ...formData, recurrence: e.target.value })}
+                    >
+                      <option value="none">None</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                      <option value="weekdays">Weekdays</option>
+                    </select>
+                  </div>
                 </div>
                 
                 <div className="form-actions">

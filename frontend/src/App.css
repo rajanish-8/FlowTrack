@@ -48,22 +48,16 @@ header .Logo h1 {
 }
 
 header nav {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-header nav ul {
-  list-style: none;
+  position: relative;
   display: flex;
-  gap: 24px;
-  padding: 0;
-  margin: 0;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
 }
 
-header nav li {
-  color: var(--text-muted);
-  font-weight: 600;
+header nav button:hover {
+  background: var(--panel-soft) !important;
+  color: var(--text) !important;
 }
 
 /* Project Display */
@@ -1246,8 +1240,23 @@ header nav li:hover {
 .logout-btn {
   min-height: 32px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
   font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+[data-theme="dark"] .logout-btn {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #f1f5f9 !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important;
+}
+
+[data-theme="dark"] .logout-btn:hover {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
 }
 
 .column-container {
@@ -1264,13 +1273,15 @@ header nav li:hover {
   align-items: center;
   justify-content: space-between;
   gap: 18px;
-  padding: 22px;
+  padding: 24px 28px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 253, 250, 0.92)),
-    linear-gradient(90deg, rgba(37, 99, 235, 0.14), rgba(20, 184, 166, 0.14));
-  border: 1px solid rgba(219, 227, 239, 0.9);
-  border-radius: 8px;
-  box-shadow: var(--shadow);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 245, 255, 0.92)),
+    linear-gradient(90deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.12));
+  border: 1px solid rgba(219, 227, 239, 0.85);
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(99, 102, 241, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
 }
 
 .board-copy {
@@ -1302,12 +1313,17 @@ header nav li:hover {
 }
 
 .board-actions {
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
 }
 
 .management-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   margin-right: 0;
 }
@@ -1317,18 +1333,21 @@ header nav li:hover {
 .retry-button {
   min-height: 38px;
   border-radius: 999px;
-  border: 1px solid transparent;
-  font-weight: 800;
-  letter-spacing: 0;
-  box-shadow: none;
+  border: 1px solid var(--border);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
+  padding: 8px 16px;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .btn-primary,
 .management-actions .btn-primary,
 .retry-button {
-  background: var(--brand-strong);
+  background: var(--brand);
   color: #fff;
-  border-color: var(--brand-strong);
+  border-color: var(--brand);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
 }
 
 .btn-primary:hover,
@@ -1336,34 +1355,37 @@ header nav li:hover {
 .retry-button:hover {
   background: var(--primary-hover);
   border-color: var(--primary-hover);
-  transform: translateY(-1px);
+  transform: translateY(-1.5px);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
 .btn-secondary,
 .management-actions .btn-secondary {
-  background: #ffffff;
-  color: var(--primary-text);
-  border-color: rgba(37, 99, 235, 0.22);
+  background: var(--panel);
+  color: var(--text);
+  border-color: var(--border);
 }
 
 .btn-secondary:hover,
 .management-actions .btn-secondary:hover {
-  background: var(--primary-bg);
-  color: var(--primary-text);
-  transform: translateY(-1px);
+  background: var(--panel-soft);
+  color: var(--brand);
+  border-color: var(--brand);
+  transform: translateY(-1.5px);
 }
 
 .project-dropdown-button,
 .project-name {
   min-height: 38px;
   border-radius: 999px;
-  border-color: rgba(37, 99, 235, 0.22);
-  background: #fff;
-  box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
+  border: 1px solid var(--border);
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .project-dropdown-menu {
-  border-radius: 8px;
+  border-radius: 12px;
   box-shadow: var(--shadow);
 }
 
@@ -1483,13 +1505,18 @@ header nav li:hover {
 
 .div-card {
   overflow: hidden;
-  border-radius: 8px;
-  border-color: rgba(219, 227, 239, 0.96);
-  box-shadow: 0 10px 24px rgba(31, 41, 55, 0.08);
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 14px rgba(31, 41, 55, 0.05);
+  background: var(--panel);
+  padding: 14px;
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, border-color 0.18s ease;
 }
 
 .div-card:hover {
-  box-shadow: 0 16px 32px rgba(31, 41, 55, 0.12);
+  transform: translateY(-2.5px);
+  box-shadow: 0 14px 28px rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.4);
 }
 
 .task-name {
@@ -1569,8 +1596,14 @@ header nav li:hover {
 }
 
 @media (max-width: 1000px) {
+  header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
   header nav {
-    display: none;
+    order: 3;
+    width: 100%;
+    margin-top: 6px;
   }
 
   .board-hero {

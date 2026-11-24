@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { organizationAPI, projectAPI } from "../utils/api";
+import { organizationAPI, projectAPI, clientAPI } from "../utils/api";
 import ProjectDetails from "./ProjectDetails";
 import "./Management.css";
 
 function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
   const [projects, setProjects] = useState([]);
+  const [clients, setClients] = useState([]);
   const [organizationMembers, setOrganizationMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,6 +17,7 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
     name: "",
     description: "",
     end_date: "",
+    client: null,
     team_member_ids: [],
     manager_ids: []
   });
@@ -28,12 +30,14 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
   const loadProjects = async () => {
     try {
       setLoading(true);
-      const [data, members] = await Promise.all([
+      const [data, members, clientsList] = await Promise.all([
         projectAPI.getAll(),
         organizationAPI.getMembers().catch(() => []),
+        clientAPI.getAll().catch(() => []),
       ]);
       setProjects(data);
       setOrganizationMembers(members);
+      setClients(clientsList);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -87,6 +91,7 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
       name: "",
       description: "",
       end_date: "",
+      client: null,
       team_member_ids: [],
       manager_ids: []
     });
@@ -98,6 +103,7 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
       name: project.name,
       description: project.description || "",
       end_date: project.end_date ? project.end_date.split('T')[0] : "",
+      client: project.client || null,
       team_member_ids: project.members ? project.members.map(m => m.user_id) : [],
       manager_ids: project.members ? project.members.filter(m => m.role === 'manager').map(m => m.user_id) : []
     });
@@ -253,6 +259,11 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
                       {project.description || "No description provided"}
                     </p>
                     <div className="project-meta">
+                      {project.client_name && (
+                        <span style={{ fontSize: "0.74rem", fontWeight: 700, color: "var(--brand)", background: "rgba(37,99,235,0.1)", padding: "2px 8px", borderRadius: "6px" }}>
+                          🏢 {project.client_name}
+                        </span>
+                      )}
                       <span className="project-members">
                         {project.members ? project.members.length : 0} members
                       </span>
@@ -331,6 +342,22 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
                   />
                 </div>
 
+                <div className="form-group">
+                  <label htmlFor="client">Client Account (Mini-CRM)</label>
+                  <select
+                    id="client"
+                    value={formData.client || ""}
+                    onChange={(e) => setFormData({ ...formData, client: e.target.value ? Number(e.target.value) : null })}
+                  >
+                    <option value="">No Client (Internal Project)</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 {renderMemberSelector()}
                 
                 <div className="form-actions">
@@ -384,6 +411,22 @@ function ProjectManagement({ userRole, onProjectUpdate, onClose }) {
                     value={formData.end_date}
                     onChange={(e) => setFormData({...formData, end_date: e.target.value})}
                   />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="edit_client">Client Account (Mini-CRM)</label>
+                  <select
+                    id="edit_client"
+                    value={formData.client || ""}
+                    onChange={(e) => setFormData({ ...formData, client: e.target.value ? Number(e.target.value) : null })}
+                  >
+                    <option value="">No Client (Internal Project)</option>
+                    {clients.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 {renderMemberSelector()}

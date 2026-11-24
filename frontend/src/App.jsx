@@ -10,8 +10,9 @@ import Signup from './pages/signup.jsx'
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Landing />} />
+      <Route path="/" element={<Board />} />
       <Route path="/board" element={<Board />} />
+      <Route path="/landing" element={<Landing />} />
       <Route path="/create-organization" element={<CreateOrganization />} />
       <Route path="/login" element={<Login />} />
       <Route path="/pending-invite" element={<PendingInvite />} />

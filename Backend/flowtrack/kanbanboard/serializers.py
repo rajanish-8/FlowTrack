@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Account, Organization, OrganizationMembership, Project, Task, ProjectMember
+from .models import Account, Organization, OrganizationMembership, Project, Task, ProjectMember, TaskComment, ActivityLog, TaskAttachment, Client, TimeEntry, Notification
 from django.db import transaction, IntegrityError
 
 class SignupSerializer(serializers.Serializer):
@@ -123,29 +123,50 @@ class AccountMiniSerializer(serializers.ModelSerializer):
 class TaskSerializerForBoard(serializers.ModelSerializer):
    assigned_to = ProjectMemberMiniSerializer(read_only=True)
    project = serializers.IntegerField(source="project.id", read_only=True)
+   total_time_minutes = serializers.SerializerMethodField()
+
    class Meta:
       model=Task
-      fields = ["id","title","description","due_date","assigned_to", "status", "priority", "project"]
+      fields = [
+         "id","title","description","due_date","assigned_to", "status", "priority", 
+         "project", "checklist", "created_at", "estimated_hours", "recurrence", 
+         "resolution", "blocked_reason", "tags", "total_time_minutes"
+      ]
+
+   def get_total_time_minutes(self, obj):
+      return sum(entry.duration_minutes for entry in obj.time_entries.all())
 
 class CreateTaskForBoard(serializers.ModelSerializer):
-   project = serializers.PrimaryKeyRelatedField(queryset= Project.objects.all(), write_only=True)
-   assigned_to = serializers.PrimaryKeyRelatedField(queryset=ProjectMember.objects.all(),write_only=True)
+   project = serializers.PrimaryKeyRelatedField(queryset= Project.objects.all(), write_only=True, required=False)
+   assigned_to = serializers.PrimaryKeyRelatedField(queryset=ProjectMember.objects.all(),write_only=True, required=False)
+   checklist = serializers.JSONField(required=False)
+   tags = serializers.JSONField(required=False)
 
    class Meta:
       model = Task
-      fields = ["title", "description","due_date","priority","project","assigned_to", "status"]   
+      fields = [
+         "title", "description","due_date","priority","project","assigned_to", 
+         "status", "checklist", "estimated_hours", "recurrence", "resolution", 
+         "blocked_reason", "tags"
+      ]   
 
    def create(self, validated_data):
       try:
          with transaction.atomic():
             task = Task.objects.create(
                  title=validated_data.get("title"),
-                    description=validated_data.get("description", ""),
-                    due_date=validated_data.get("due_date"),
-                    priority=validated_data.get("priority", "low"),
-                    status=validated_data.get("status", "to do"),
-                    project=validated_data.get("project"),
-                    assigned_to=validated_data.get("assigned_to")
+                 description=validated_data.get("description", ""),
+                 due_date=validated_data.get("due_date"),
+                 priority=validated_data.get("priority", "low"),
+                 status=validated_data.get("status", "to do"),
+                 project=validated_data.get("project"),
+                 assigned_to=validated_data.get("assigned_to"),
+                 checklist=validated_data.get("checklist", []),
+                 estimated_hours=validated_data.get("estimated_hours", 0.0),
+                 recurrence=validated_data.get("recurrence", "none"),
+                 resolution=validated_data.get("resolution", ""),
+                 blocked_reason=validated_data.get("blocked_reason", ""),
+                 tags=validated_data.get("tags", [])
             )
 
             return task
@@ -158,10 +179,12 @@ class CreateTaskForBoard(serializers.ModelSerializer):
 class ProjectSerializerForBoard(serializers.ModelSerializer):
    tasks = TaskSerializerForBoard(many=True,read_only=True )
    members = serializers.SerializerMethodField()
+   client = serializers.IntegerField(source="client.id", read_only=True)
+   client_name = serializers.CharField(source="client.name", read_only=True)
 
    class Meta:
       model =  Project
-      fields = ["id","name","members","tasks"]
+      fields = ["id","name","members","tasks", "client", "client_name"]
 
    def get_members(self, obj):
       return ProjectMemberDetailSerializer(obj.projectmember_set.select_related("user"), many=True).data
@@ -322,5 +345,75 @@ class UserRoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProjectMember
         fields = ["project_id", "project_name", "role"]
+
+
+class TaskCommentSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    user_profile_picture = serializers.ImageField(source='user.profile_picture', read_only=True)
+
+    class Meta:
+        model = TaskComment
+        fields = ['id', 'task', 'user', 'user_username', 'user_profile_picture', 'content', 'created_at']
+        read_only_fields = ['user', 'task', 'created_at']
+
+
+class ActivityLogSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+
+    class Meta:
+        model = ActivityLog
+        fields = ['id', 'project', 'user', 'user_username', 'action', 'details', 'created_at']
+        read_only_fields = ['created_at']
+
+
+class TaskAttachmentSerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TaskAttachment
+        fields = ['id', 'task', 'user', 'user_username', 'file', 'file_url', 'filename', 'file_size', 'created_at']
+        read_only_fields = ['user', 'task', 'created_at', 'file_url']
+
+    def get_file_url(self, obj):
+        request = self.context.get('request')
+        if obj.file:
+            if request:
+                return request.build_absolute_uri(obj.file.url)
+            return obj.file.url
+        return None
+
+
+class ClientSerializer(serializers.ModelSerializer):
+    projects_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Client
+        fields = ["id", "name", "contact_name", "email", "phone", "website", "notes", "created_at", "projects_count"]
+        read_only_fields = ["id", "created_at", "projects_count"]
+
+    def get_projects_count(self, obj):
+        return obj.projects.count()
+
+
+class TimeEntrySerializer(serializers.ModelSerializer):
+    user_username = serializers.CharField(source='user.username', read_only=True)
+    user_email = serializers.CharField(source='user.email', read_only=True)
+
+    class Meta:
+        model = TimeEntry
+        fields = ["id", "task", "user", "user_username", "user_email", "duration_minutes", "date", "notes", "billable", "created_at"]
+        read_only_fields = ["id", "user", "created_at"]
+
+
+class NotificationSerializer(serializers.ModelSerializer):
+    related_task_title = serializers.CharField(source='related_task.title', read_only=True, allow_null=True)
+
+    class Meta:
+        model = Notification
+        fields = ['id', 'user', 'message', 'type', 'related_task', 'related_task_title', 'is_read', 'created_at']
+        read_only_fields = ['id', 'user', 'message', 'type', 'related_task', 'created_at']
+
+
 
 

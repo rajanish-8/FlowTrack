@@ -204,3 +204,202 @@ export const organizationAPI = {
     return handleApiResponse(response);
   },
 };
+
+// AI Assistant & Intelligence API calls
+export const aiAPI = {
+  enhanceTask: async (data) => {
+    const response = await fetch(`${API_BASE_URL}/ai/enhance-task/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleApiResponse(response);
+  },
+
+  breakdownTask: async (data) => {
+    const response = await fetch(`${API_BASE_URL}/ai/breakdown-task/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleApiResponse(response);
+  },
+
+  getSprintSummary: async (projectId) => {
+    const response = await fetch(`${API_BASE_URL}/ai/sprint-summary/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ project_id: projectId }),
+    });
+    return handleApiResponse(response);
+  },
+
+  chat: async (data) => {
+    const response = await fetch(`${API_BASE_URL}/ai/chat/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    return handleApiResponse(response);
+  },
+
+  getConfig: async () => {
+    const response = await fetch(`${API_BASE_URL}/ai/config/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  updateConfig: async (geminiKey) => {
+    const response = await fetch(`${API_BASE_URL}/ai/config/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ gemini_api_key: geminiKey }),
+    });
+    return handleApiResponse(response);
+  },
+};
+
+// Task Comments API
+export const commentAPI = {
+  getByTaskId: async (taskId) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  create: async (taskId, content) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/comments/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ content }),
+    });
+    return handleApiResponse(response);
+  },
+};
+
+// Project Activity Audit Log API
+export const activityAPI = {
+  getByProjectId: async (projectId) => {
+    const response = await fetch(`${API_BASE_URL}/projects/${projectId}/activities/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+};
+
+// Task Attachments API
+export const attachmentAPI = {
+  getByTaskId: async (taskId) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/attachments/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  upload: async (taskId, file) => {
+    const token = localStorage.getItem("token");
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/attachments/`, {
+      method: "POST",
+      headers: {
+        Authorization: `Token ${token}`,
+      },
+      body: formData,
+    });
+    return handleApiResponse(response);
+  },
+
+  delete: async (attachmentId) => {
+    const response = await fetch(`${API_BASE_URL}/attachments/${attachmentId}/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+};
+
+// Mini-CRM Client API calls (inspired by django-crm & django-coleman)
+export const clientAPI = {
+  getAll: async () => {
+    const response = await fetch(`${API_BASE_URL}/clients/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  getById: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/clients/${id}/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  create: async (clientData) => {
+    const response = await fetch(`${API_BASE_URL}/clients/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clientData),
+    });
+    return handleApiResponse(response);
+  },
+
+  update: async (id, clientData) => {
+    const response = await fetch(`${API_BASE_URL}/clients/${id}/`, {
+      method: "PUT",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(clientData),
+    });
+    return handleApiResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/clients/${id}/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+};
+
+// Task Time Tracking API calls (inspired by taskcoach & django-coleman)
+export const timeEntryAPI = {
+  getByTaskId: async (taskId) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/time-entries/`, {
+      method: "GET",
+      headers: getAuthHeaders(),
+    });
+    return handleApiResponse(response);
+  },
+
+  create: async (taskId, entryData) => {
+    const response = await fetch(`${API_BASE_URL}/tasks/${taskId}/time-entries/`, {
+      method: "POST",
+      headers: getAuthHeaders(),
+      body: JSON.stringify(entryData),
+    });
+    return handleApiResponse(response);
+  },
+
+  delete: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/time-entries/${id}/`, {
+      method: "DELETE",
+      headers: getAuthHeaders(),
+    });
+    if (response.status === 204) {
+      return {};
+    }
+    return handleApiResponse(response);
+  },
+};
+
+

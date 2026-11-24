@@ -1,28 +1,89 @@
+# =====================
 # Python
+# =====================
 __pycache__/
-*.pyc
-.venv/
-myvenv/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
 venv/
-*.sqlite3
-.pytest_cache/
-.coverage
-htmlcov/
+env/
+.venv/
+.env
+*.env
+db.sqlite3
+*.log
+media/
+staticfiles/
+*.pot
+*.mo
 
-# Node
+# =====================
+# Node / Frontend
+# =====================
 node_modules/
 dist/
-build/
-.vite/
-
-# General
 .env
-.env.*
-*.log
-.vercel
-.DS_Store
+.env.local
+.env.production
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# User-uploaded media. Keep committed defaults/assets elsewhere.
-Backend/flowtrack/media/uploads/
-Backend/flowtrack/media/Profiles/*
-!Backend/flowtrack/media/Profiles/default.png
+# =====================
+# OS
+# =====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# =====================
+# IDE / Editor
+# =====================
+.vscode/settings.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# =====================
+# Docs build artifacts
+# =====================
+_build/
+site/
+docs/_build/
+
+# =====================
+# Large binary docs
+# (tracked via Documentation/ folder locally;
+#  too large for GitHub free tier — use Git LFS or exclude)
+# =====================
+Documentation/*.docx
+Documentation/*.docm
+Documentation/*.pptx
+Documentation/*.pdf
+Documentation/generators/
+frontend/public/documentation/*.docx
+frontend/public/documentation/*.pptx
+frontend/public/documentation/*.pdf
+
+# =====================
+# Backend venv (already in venv/ rule above, adding full path)
+# =====================
+Backend/flowtrack/venv/
+Backend/flowtrack/*.pyc
+Backend/flowtrack/__pycache__/
+
+# =====================
+# Screenshots folder (deleted, ignore re-creation)
+# =====================
+screenshots/

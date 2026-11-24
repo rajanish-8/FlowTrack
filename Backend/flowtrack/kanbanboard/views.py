@@ -6,11 +6,12 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.pagination import PageNumberPagination
 from django.db import IntegrityError
 from django.contrib.auth import authenticate
 from . import serializers
 from rest_framework.authtoken.models import Token
-from .models import Account, OrganizationMembership, Project, Task, ProjectMember
+from .models import Account, OrganizationMembership, Project, Task, ProjectMember, TaskComment, ActivityLog, TaskAttachment, Client, TimeEntry, Notification
 from .permissions import *
 
 def _is_super_admin(request, view):
@@ -393,6 +394,25 @@ class TaskAPIView(APIView):
             tasks_assigned_to_user = Task.objects.filter(assigned_to_id__in=assigned_pm_ids)
             tasks = (tasks_for_managed_projects | tasks_assigned_to_user).distinct()
 
+        # Search support
+        search_query = request.query_params.get('search', '').strip()
+        if search_query:
+            from django.db.models import Q
+            tasks = tasks.filter(
+                Q(title__icontains=search_query) |
+                Q(description__icontains=search_query) |
+                Q(status__icontains=search_query) |
+                Q(priority__icontains=search_query)
+            )
+
+        # Pagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        page = paginator.paginate_queryset(tasks, request)
+        if page is not None:
+            serializer = serializers.TaskSerializerForBoard(page, many=True)
+            return paginator.get_paginated_response(serializer.data)
+
         serializer = serializers.TaskSerializerForBoard(tasks, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -425,7 +445,13 @@ class TaskAPIView(APIView):
         serializer = serializers.CreateTaskForBoard(data=request.data)
         if serializer.is_valid():
             task = serializer.save()
-            return Response({"id": task.id, "title": task.title, "status": task.status}, status=status.HTTP_201_CREATED)
+            ActivityLog.objects.create(
+                project=task.project,
+                user=request.user,
+                action="task_created",
+                details=f"Created task '{task.title}'"
+            )
+            return Response({"id": task.id, "title": task.title, "status": task.status, "checklist": task.checklist}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk):
@@ -443,21 +469,70 @@ class TaskAPIView(APIView):
         if not (is_owner or is_manager or is_assigned_member):
             return Response({"error": "Permission denied. You can only update tasks assigned to you."}, status=status.HTTP_403_FORBIDDEN)
 
-        # If it's just a status update and the user is an assigned member (not owner or manager),
-        # only allow status and priority updates, not other field changes
+        # Allow status, priority, checklist, tags, resolution, blocker updates for assigned members
         if is_assigned_member and not (is_owner or is_manager):
-            # Allow status and priority updates for assigned members
-            allowed_fields = ['status', 'priority']
+            allowed_fields = ['status', 'priority', 'checklist', 'estimated_hours', 'recurrence', 'resolution', 'blocked_reason', 'tags']
             update_data = {k: v for k, v in request.data.items() if k in allowed_fields}
             if not update_data:
-                return Response({"error": "You can only update the status and priority of tasks assigned to you."}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"error": "No valid fields provided for update."}, status=status.HTTP_400_BAD_REQUEST)
         else:
             update_data = request.data
 
+        old_status = task.status
         serializer = serializers.CreateTaskForBoard(instance=task, data=update_data, partial=True)
         if serializer.is_valid():
             updated_task = serializer.save()
-            return Response({"id": updated_task.id, "title": updated_task.title, "status": updated_task.status}, status=status.HTTP_200_OK)
+            if old_status != updated_task.status:
+                ActivityLog.objects.create(
+                    project=updated_task.project,
+                    user=request.user,
+                    action="task_moved",
+                    details=f"Moved '{updated_task.title}' to {updated_task.status.title()}"
+                )
+                # Recurrence handling
+                if updated_task.status.lower() == "done" and updated_task.recurrence and updated_task.recurrence != "none":
+                    import datetime
+                    today = datetime.date.today()
+                    if updated_task.recurrence == "daily":
+                        next_due = today + datetime.timedelta(days=1)
+                    elif updated_task.recurrence == "weekdays":
+                        days = 1 if today.weekday() < 4 else (7 - today.weekday())
+                        next_due = today + datetime.timedelta(days=days)
+                    elif updated_task.recurrence == "weekly":
+                        next_due = today + datetime.timedelta(weeks=1)
+                    elif updated_task.recurrence == "monthly":
+                        next_due = today + datetime.timedelta(days=30)
+                    else:
+                        next_due = None
+                    if next_due:
+                        # Auto-create next recurring cycle
+                        Task.objects.create(
+                            title=updated_task.title,
+                            description=updated_task.description,
+                            due_date=next_due,
+                            priority=updated_task.priority,
+                            project=updated_task.project,
+                            assigned_to=updated_task.assigned_to,
+                            status="to do",
+                            recurrence=updated_task.recurrence,
+                            estimated_hours=updated_task.estimated_hours,
+                            tags=updated_task.tags,
+                            checklist=[{"id": idx, "text": item.get("text", ""), "completed": False} for idx, item in enumerate(updated_task.checklist)] if isinstance(updated_task.checklist, list) else []
+                        )
+                        ActivityLog.objects.create(
+                            project=updated_task.project,
+                            user=request.user,
+                            action="recurrence_scheduled",
+                            details=f"Scheduled next recurring cycle for '{updated_task.title}' on {next_due}"
+                        )
+            elif 'checklist' in update_data:
+                ActivityLog.objects.create(
+                    project=updated_task.project,
+                    user=request.user,
+                    action="checklist_updated",
+                    details=f"Updated checklist for '{updated_task.title}'"
+                )
+            return Response(serializers.TaskSerializerForBoard(updated_task).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
@@ -469,5 +544,279 @@ class TaskAPIView(APIView):
         if not user_can_manage_project(request.user, task.project):
             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
+        proj = task.project
+        title = task.title
         task.delete()
+        ActivityLog.objects.create(
+            project=proj,
+            user=request.user,
+            action="task_deleted",
+            details=f"Deleted task '{title}'"
+        )
         return Response({"message": "Task deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+class TaskCommentView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or task.project.organization_id != membership.organization_id:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        comments = task.comments.select_related('user').all()
+        serializer = serializers.TaskCommentSerializer(comments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or task.project.organization_id != membership.organization_id:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        content = request.data.get("content", "").strip()
+        if not content:
+            return Response({"error": "Comment content cannot be empty"}, status=status.HTTP_400_BAD_REQUEST)
+        comment = TaskComment.objects.create(
+            task=task,
+            user=request.user,
+            content=content
+        )
+        ActivityLog.objects.create(
+            project=task.project,
+            user=request.user,
+            action="comment_added",
+            details=f"Commented on '{task.title}'"
+        )
+        return Response(serializers.TaskCommentSerializer(comment).data, status=status.HTTP_201_CREATED)
+
+
+class ProjectActivityLogView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        project = get_object_or_404(Project, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or project.organization_id != membership.organization_id:
+            return Response({"error": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+        logs = project.activities.select_related('user').all()[:40]
+        serializer = serializers.ActivityLogSerializer(logs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+class TaskAttachmentView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or task.project.organization_id != membership.organization_id:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        attachments = task.attachments.select_related('user').all()
+        serializer = serializers.TaskAttachmentSerializer(attachments, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or task.project.organization_id != membership.organization_id:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        file_obj = request.FILES.get('file')
+        if not file_obj:
+            return Response({"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        attachment = TaskAttachment.objects.create(
+            task=task,
+            user=request.user,
+            file=file_obj,
+            filename=file_obj.name,
+            file_size=file_obj.size
+        )
+        ActivityLog.objects.create(
+            project=task.project,
+            user=request.user,
+            action="attachment_added",
+            details=f"Attached '{file_obj.name}' to '{task.title}'"
+        )
+        serializer = serializers.TaskAttachmentSerializer(attachment, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class AttachmentDetailView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        attachment = get_object_or_404(TaskAttachment, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or attachment.task.project.organization_id != membership.organization_id:
+            return Response({"error": "Attachment not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        # User must be owner/manager or the uploader
+        if membership.role not in [OrganizationMembership.ROLE_OWNER, OrganizationMembership.ROLE_MANAGER] and attachment.user != request.user:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        filename = attachment.filename
+        task_title = attachment.task.title
+        project = attachment.task.project
+        try:
+            if attachment.file:
+                attachment.file.delete(save=False)
+        except Exception:
+            pass
+        attachment.delete()
+
+        ActivityLog.objects.create(
+            project=project,
+            user=request.user,
+            action="attachment_removed",
+            details=f"Removed '{filename}' from '{task_title}'"
+        )
+        return Response({"message": "Attachment deleted successfully"}, status=status.HTTP_200_OK)
+
+
+# ==========================================================
+# CLIENT / CRM API VIEWS (inspired by DjangoCRM & Coleman)
+# ==========================================================
+
+class ClientListCreateView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        membership = get_user_membership(request.user)
+        if not membership:
+            return Response({"error": "Organization membership required"}, status=status.HTTP_403_FORBIDDEN)
+        clients = Client.objects.filter(organization=membership.organization)
+        # Search support
+        search_query = request.query_params.get('search', '').strip()
+        if search_query:
+            from django.db.models import Q
+            clients = clients.filter(
+                Q(name__icontains=search_query) |
+                Q(contact_name__icontains=search_query) |
+                Q(email__icontains=search_query)
+            )
+        serializer = serializers.ClientSerializer(clients, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        membership = get_user_membership(request.user)
+        if not membership or membership.role not in [OrganizationMembership.ROLE_OWNER, OrganizationMembership.ROLE_MANAGER]:
+            return Response({"error": "Only owners or managers can add clients"}, status=status.HTTP_403_FORBIDDEN)
+        
+        name = request.data.get("name", "").strip()
+        if not name:
+            return Response({"error": "Client/Company name is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        client = Client.objects.create(
+            organization=membership.organization,
+            name=name,
+            contact_name=request.data.get("contact_name", "").strip(),
+            email=request.data.get("email", "").strip(),
+            phone=request.data.get("phone", "").strip(),
+            website=request.data.get("website", "").strip(),
+            notes=request.data.get("notes", "").strip(),
+        )
+        return Response(serializers.ClientSerializer(client).data, status=status.HTTP_201_CREATED)
+
+
+class ClientDetailView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        membership = get_user_membership(request.user)
+        if not membership:
+            return Response({"error": "Organization membership required"}, status=status.HTTP_403_FORBIDDEN)
+        client = get_object_or_404(Client, pk=pk, organization=membership.organization)
+        return Response(serializers.ClientSerializer(client).data, status=status.HTTP_200_OK)
+
+    def put(self, request, pk):
+        membership = get_user_membership(request.user)
+        if not membership or membership.role not in [OrganizationMembership.ROLE_OWNER, OrganizationMembership.ROLE_MANAGER]:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        client = get_object_or_404(Client, pk=pk, organization=membership.organization)
+        serializer = serializers.ClientSerializer(instance=client, data=request.data, partial=True)
+        if serializer.is_valid():
+            updated = serializer.save()
+            return Response(serializers.ClientSerializer(updated).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        membership = get_user_membership(request.user)
+        if not membership or membership.role not in [OrganizationMembership.ROLE_OWNER, OrganizationMembership.ROLE_MANAGER]:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        client = get_object_or_404(Client, pk=pk, organization=membership.organization)
+        client.delete()
+        return Response({"message": "Client deleted successfully"}, status=status.HTTP_200_OK)
+
+
+# ==========================================================
+# TIME TRACKING & EFFORT LOGGING (inspired by TaskCoach & Coleman)
+# ==========================================================
+
+class TaskTimeEntryView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or task.project.organization_id != membership.organization_id:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        entries = task.time_entries.select_related('user').all()
+        serializer = serializers.TimeEntrySerializer(entries, many=True)
+        total_minutes = sum(e.duration_minutes for e in entries)
+        return Response({
+            "entries": serializer.data,
+            "total_minutes": total_minutes,
+            "total_hours": round(total_minutes / 60, 2),
+            "estimated_hours": float(task.estimated_hours or 0.0)
+        }, status=status.HTTP_200_OK)
+
+    def post(self, request, pk):
+        task = get_object_or_404(Task, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or task.project.organization_id != membership.organization_id:
+            return Response({"error": "Task not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        duration = int(request.data.get("duration_minutes", 0))
+        if duration <= 0:
+            return Response({"error": "Duration must be greater than 0 minutes"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        entry = TimeEntry.objects.create(
+            task=task,
+            user=request.user,
+            duration_minutes=duration,
+            notes=request.data.get("notes", "").strip(),
+            billable=bool(request.data.get("billable", True)),
+        )
+        ActivityLog.objects.create(
+            project=task.project,
+            user=request.user,
+            action="time_logged",
+            details=f"Logged {duration}m on '{task.title}'"
+        )
+        return Response(serializers.TimeEntrySerializer(entry).data, status=status.HTTP_201_CREATED)
+
+
+class TimeEntryDetailView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, pk):
+        entry = get_object_or_404(TimeEntry, pk=pk)
+        membership = get_user_membership(request.user)
+        if not membership or entry.task.project.organization_id != membership.organization_id:
+            return Response({"error": "Time entry not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        if membership.role not in [OrganizationMembership.ROLE_OWNER, OrganizationMembership.ROLE_MANAGER] and entry.user != request.user:
+            return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
+        
+        entry.delete()
+        return Response({"message": "Time entry removed"}, status=status.HTTP_200_OK)
+
+

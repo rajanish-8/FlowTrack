@@ -1,6 +1,11 @@
 {
+  "name": "flowtrack-enterprise",
   "private": true,
   "scripts": {
+    "start": "python main.py",
+    "dev": "python main.py",
+    "stop": "python main.py --stop",
+    "status": "python main.py --status",
     "build": "npm --prefix frontend run build"
   }
 }
